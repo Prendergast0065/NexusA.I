@@ -1,0 +1,41 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.env/
+.venv/
+venv/
+ENV/
+
+# IDEs / editors
+.idea/
+.vscode/
+*.sw?
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs / coverage / profiling
+*.log
+coverage/
+htmlcov/
+.cache/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# If you ship requirements
+Pipfile.lock
+
+#files:
+junk
