@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
+import stripe  # Stripe payment processing
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import execute_backtest_strategy  # Assuming my_backtester_logic.py is in the same directory
@@ -23,6 +24,11 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Stripe configuration
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
+
 
 # --- Routes to serve your HTML pages ---
 @app.route('/')
@@ -43,7 +49,28 @@ def login_page():
 @app.route('/checkout')
 def checkout_page():
     plan = request.args.get('plan', 'developer')
-    return render_template('checkout.html', selected_plan=plan)
+    return render_template('checkout.html',
+                           selected_plan=plan,
+                           publishable_key=STRIPE_PUBLISHABLE_KEY)
+
+
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price': STRIPE_PRICE_ID,
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=url_for('member_dashboard_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=url_for('checkout_page', _external=True),
+        )
+        return jsonify({'id': session.id})
+    except Exception as e:
+        app.logger.error(f"Stripe checkout creation failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/how-it-works')
