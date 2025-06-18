@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - NexusTrade AI Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #E5E7EB; }
+        .checkout-container, .order-summary { background-color: #1F2937; border: 1px solid #374151; }
+        .cta-button { background-color: #3B82F6; transition: background-color 0.3s ease; }
+        .cta-button:hover { background-color: #2563EB; }
+        .disclaimer {
+            background-color: #374151; color: #D1D5DB; padding: 0.75rem 1rem;
+            border-radius: 0.5rem; font-size: 0.875rem;
+            border-left: 4px solid #F59E0B;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen px-4 py-12">
+    <div class="w-full max-w-lg">
+        <div class="text-center mb-8">
+            <a href="/" class="text-3xl font-bold text-white">NexusTrade <span class="text-blue-500">AI Lab</span></a>
+            <h2 class="mt-2 text-2xl font-semibold text-white">Complete Your Access</h2>
+        </div>
+        <div class="checkout-container p-8 rounded-xl shadow-2xl space-y-6">
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Order Summary</h3>
+                <div class="order-summary p-6 rounded-lg space-y-3">
+                    <div class="flex justify-between"><span class="text-gray-400">Selected Plan:</span><span id="selectedPlanName" class="font-medium text-white">Strategy Developer Pack</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Evaluation Frequency:</span><span id="evaluationFrequency" class="font-medium text-white">Every 30 minutes</span></div>
+                    <div class="flex justify-between border-t border-gray-700 pt-3 mt-3"><span class="text-lg font-semibold text-white">Total (One-Time):</span><span id="totalPrice" class="text-lg font-bold text-blue-400">$X</span></div>
+                </div>
+            </div>
+            <div class="disclaimer"><p><strong>Note:</strong> This is a conceptual checkout page. In a real application, you would be redirected to a secure third-party payment gateway.</p></div>
+            <div class="pt-2">
+                <button type="button" id="proceedToPaymentButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                    Confirm & Proceed to Payment (Mock)
+                </button>
+            </div>
+            <p class="text-center text-sm text-gray-400">
+                <a href="/#pricing" class="font-medium text-blue-500 hover:text-blue-400">Change Plan</a>
+            </p>
+        </div>
+         <p class="text-xs text-center text-gray-500 mt-6">(This is a mockup. Payment processing is not functional.)</p>
+    </div>
+    <script>
+        function getQueryParam(param) { const urlParams = new URLSearchParams(window.location.search); return urlParams.get(param); }
+        const plan = getQueryParam('plan');
+        const selectedPlanNameEl = document.getElementById('selectedPlanName');
+        const evaluationFrequencyEl = document.getElementById('evaluationFrequency');
+        const totalPriceEl = document.getElementById('totalPrice');
+        if (plan === 'analyst') {
+            selectedPlanNameEl.textContent = 'High-Frequency Analyst Pack'; evaluationFrequencyEl.textContent = 'Every 2 minutes'; totalPriceEl.textContent = '$15X';
+        } else { // Default to developer pack or if no plan param
+            selectedPlanNameEl.textContent = 'Strategy Developer Pack'; evaluationFrequencyEl.textContent = 'Every 30 minutes'; totalPriceEl.textContent = '$X';
+        }
+        const proceedButton = document.getElementById('proceedToPaymentButton');
+        if(proceedButton) {
+            proceedButton.addEventListener('click', function() {
+                alert('Mock: Redirecting to secure payment gateway... After successful payment, redirecting to Member Dashboard.');
+                // Redirect to the dashboard route
+                window.location.href = "/dashboard";
+            });
+        }
+    </script>
+</body>
+</html>

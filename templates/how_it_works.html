@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works - NexusTrade AI Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #E5E7EB; }
+        .content-section { background-color: #1F2937; border: 1px solid #374151; }
+        .cta-button { background-color: #3B82F6; transition: background-color 0.3s ease; }
+        .cta-button:hover { background-color: #2563EB; }
+        .secondary-button { background-color: transparent; border: 1px solid #3B82F6; color: #3B82F6;}
+        .secondary-button:hover { background-color: #3B82F6; color: #FFFFFF;}
+        .step-icon { background-color: #3B82F6; color: white; }
+        .disclaimer { background-color: #374151; color: #D1D5DB; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; border-left: 4px solid #F59E0B;}
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <nav class="bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                     <a href="/" class="text-2xl font-bold text-white">NexusTrade <span class="text-blue-500">AI Lab</span></a>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-center space-x-1">
+                        <a href="/#features" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                        <a href="/how-it-works" class="bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium">How It Works</a>
+                        <a href="/#pricing" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Access Plans</a>
+                        <a href="/dashboard" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Member Dashboard</a>
+                    </div>
+                </div>
+                <div class="hidden md:flex md:items-center md:space-x-4">
+                     <a href="/login" class="secondary-button px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                     <a href="/signup" class="cta-button text-white px-4 py-2 rounded-md text-sm font-medium shadow-md">Sign Up</a>
+                </div>
+                 <div class="-mr-2 flex md:hidden">
+                    <button type="button" id="mobile-menu-button" class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" id="nav-icon-menu" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg class="hidden h-6 w-6" id="nav-icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="/#features" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Features</a>
+                <a href="/how-it-works" class="bg-gray-700 text-white block px-3 py-2 rounded-md text-base font-medium">How It Works</a>
+                <a href="/#pricing" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Access Plans</a>
+                <a href="/dashboard" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Member Dashboard</a>
+                <div class="mt-2 space-y-1">
+                    <a href="/login" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</a>
+                    <a href="/signup" class="cta-button text-white block px-3 py-2 rounded-md text-base font-medium shadow-lg">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-16">
+        <header class="bg-gray-800 py-16 sm:py-20 text-center">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-white leading-tight">How NexusTrade <span class="text-blue-500">AI Lab</span> Works</h1>
+                <p class="mt-4 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">Understand the step-by-step process to harness the power of AI for your crypto strategy development and paper trading simulations.</p>
+            </div>
+        </header>
+        <section class="py-12 sm:py-16">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="content-section p-6 sm:p-8 rounded-xl shadow-lg flex items-start space-x-6">
+                    <div class="step-icon flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold">1</div>
+                    <div><h3 class="text-2xl font-semibold text-white mb-2">Sign Up & Choose Your Plan</h3><p class="text-gray-400">Begin by creating your NexusTrade AI Lab account. Then, select a one-time access plan that fits your strategy development needs. Our plans determine features like evaluation frequency for your AI.</p><a href="/#pricing" class="inline-block mt-4 text-blue-400 hover:text-blue-300 font-medium">View Access Plans &rarr;</a></div>
+                </div>
+                <div class="content-section p-6 sm:p-8 rounded-xl shadow-lg flex items-start space-x-6">
+                    <div class="step-icon flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold">2</div>
+                    <div><h3 class="text-2xl font-semibold text-white mb-2">Enter the Member Dashboard</h3><p class="text-gray-400">Once you have access, log in to your Member Dashboard. This is your central hub for interacting with the AI Lab's tools, including the Backtester and the conceptual Live Paper Trading interface.</p></div>
+                </div>
+                {/* ... Other steps from previous version ... */}
+                 <div class="text-center mt-16">
+                    <h3 class="text-2xl font-semibold text-white mb-4">Ready to Start Building Your AI Strategy?</h3>
+                    <p class="text-gray-400 mb-8 max-w-xl mx-auto">NexusTrade AI Lab provides the tools and flexibility to explore the potential of AI in your crypto trading approach.</p>
+                    <a href="/#pricing" class="cta-button text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-xl">View Access Plans & Get Started</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-gray-900 border-t border-gray-700 mt-auto">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+             <div class="disclaimer max-w-3xl mx-auto mb-6">
+                <p class="font-semibold mb-2">Important Disclaimers:</p>
+                <ul class="list-disc list-inside text-left space-y-1 text-sm">
+                    <li>NexusTrade AI Lab is for educational and strategy development purposes. All trading is simulated (paper trading).</li>
+                    <li>No Guarantees: Use of this tool does not guarantee profits. Past performance in backtests is not indicative of future results.</li>
+                    <li>Risk of Trading: Real cryptocurrency trading is highly speculative and involves significant risk of loss.</li>
+                </ul>
+            </div>
+            <p class="text-gray-400">&copy; 2025 NexusTrade AI Lab. All rights reserved.</p>
+        </div>
+    </footer>
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navIconMenu = document.getElementById('nav-icon-menu');
+        const navIconClose = document.getElementById('nav-icon-close');
+
+        if (mobileMenuButton && mobileMenu && navIconMenu && navIconClose) {
+            mobileMenuButton.addEventListener('click', () => {
+                const expanded = mobileMenuButton.getAttribute('aria-expanded') === 'true' || false;
+                mobileMenuButton.setAttribute('aria-expanded', !expanded);
+                mobileMenu.classList.toggle('hidden');
+                navIconMenu.classList.toggle('hidden');
+                navIconClose.classList.toggle('hidden');
+            });
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if(!mobileMenu.classList.contains('hidden')) {
+                        mobileMenuButton.click();
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
