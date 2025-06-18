@@ -163,13 +163,6 @@ def serve_job_result_file(job_id, filename):
 
 
 if __name__ == '__main__':
-    # This part for creating dummy templates can be removed if your templates are in place
-    # html_files = ['index.html', 'signup.html', 'login.html', 'checkout.html', 'how_it_works.html', 'member_dashboard.html']
-    # for f_name in html_files:
-    #     if not os.path.exists(os.path.join('templates', f_name)):
-    #         os.makedirs('templates', exist_ok=True)
-    #         with open(os.path.join('templates', f_name), 'w') as f:
-    #             f.write(f"<h1>Mockup: {f_name}</h1><p>Content for this page would go here.</p><a href='/'>Home</a>")
-    #         print(f"Created dummy template: {f_name}")
-
-    app.run(debug=True)
+    # Allow debug mode to be toggled via the FLASK_DEBUG environment variable
+    debug_mode = os.environ.get('FLASK_DEBUG', '1') == '1'
+    app.run(debug=debug_mode)
