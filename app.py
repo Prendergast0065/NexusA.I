@@ -3,6 +3,7 @@ import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
+from dotenv import load_dotenv  # Load environment variables from a .env file
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import execute_backtest_strategy  # Assuming my_backtester_logic.py is in the same directory
@@ -12,6 +13,9 @@ from my_backtester_logic import execute_backtest_strategy  # Assuming my_backtes
 logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s] [%(levelname)s] [FlaskAPP] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
+
+# Load environment variables from .env if present
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
