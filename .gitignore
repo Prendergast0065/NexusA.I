@@ -41,3 +41,5 @@ Pipfile.lock
 # Backtesting results
 uploads/
 static/results/
+
+.env
