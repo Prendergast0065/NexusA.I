@@ -6,3 +6,4 @@ passlib[argon2]
 stripe==10.0.0
 alembic
 python-dotenv
+gunicorn
