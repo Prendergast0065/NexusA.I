@@ -31,6 +31,22 @@ The application reads configuration from environment variables using `python-dot
 - `OPENAI_API_KEY` – optional key used by the backtester logic
 - `FLASK_DEBUG` – set to `1` to enable debug mode
 
+### Stripe pricing table
+
+When configuring your pricing table in the Stripe Dashboard choose **Redirect to your site** after payment.
+
+Use these routes for the final URLs:
+
+```
+Success URL: https://your-domain.com/payment/success?session_id={CHECKOUT_SESSION_ID}
+Cancel URL:  https://your-domain.com/payment/cancel
+```
+
+The `/payment/success` endpoint verifies the checkout session and marks the
+logged-in user as paid before redirecting them to the dashboard.
+
+During local development you can use `http://127.0.0.1:5000` in place of `https://your-domain.com`.
+
 ## Deployment
 
 A simple `render.yaml` is included for deployment to Render. Adjust the environment variables there as needed.
