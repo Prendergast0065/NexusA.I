@@ -153,7 +153,7 @@ def create_checkout_session():
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=url_for('success_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            success_url=url_for('member_dashboard_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=url_for('checkout_page', _external=True),
         )
         return jsonify({'url': session.url})
