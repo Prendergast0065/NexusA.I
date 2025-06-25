@@ -223,6 +223,11 @@ def how_it_works_page():
     return render_template('how_it_works.html')
 
 
+@app.route('/prompt-guide')
+def prompt_guide_page():
+    return render_template('prompt_guide.html')
+
+
 @app.route('/dashboard')
 @login_required
 def member_dashboard_page():

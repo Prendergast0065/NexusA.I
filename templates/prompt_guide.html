@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Guide - NexusTrade AI Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #E5E7EB; }
+        .content { background-color: #1F2937; border: 1px solid #374151; }
+        .cta-button { background-color: #3B82F6; transition: background-color 0.3s ease; }
+        .cta-button:hover { background-color: #2563EB; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    <nav class="bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-white">NexusTrade <span class="text-blue-500">AI Lab</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-grow pt-16">
+        <header class="bg-gray-800 py-12 text-center">
+            <div class="max-w-4xl mx-auto px-4">
+                <h1 class="text-4xl font-extrabold text-white">How to Write an Effective AI Prompt</h1>
+            </div>
+        </header>
+        <section class="py-12">
+            <div class="max-w-3xl mx-auto px-4 space-y-6 content p-6 sm:p-8 rounded-xl shadow-lg">
+                <p class="text-gray-300">Clear instructions help the AI produce better results. Keep these tips in mind when crafting your trading strategy prompts:</p>
+                <ul class="list-disc list-inside space-y-2 text-gray-400">
+                    <li>State your goal for the strategy in one or two sentences.</li>
+                    <li>Provide any important constraints, such as risk limits or preferred indicators.</li>
+                    <li>Mention how trades should be entered and exited.</li>
+                    <li>Be explicit about time frames or assets if they matter.</li>
+                </ul>
+                <p class="text-gray-300">Use short, direct sentences and specify only what is necessary for your backtest or paper session.</p>
+                <div class="text-center pt-4">
+                    <a href="/dashboard" class="cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Back to Dashboard</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

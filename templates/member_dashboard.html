@@ -130,7 +130,10 @@
                                 <input type="password" name="backtest_openai_api_key" id="backtest_openai_api_key" placeholder="sk-xxxxxxxxxx" required>
                             </div>
                             <div>
-                                <label for="backtest_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
+                                <div class="flex items-center justify-between">
+                                    <label for="backtest_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
+                                    <a href="/prompt-guide" class="secondary-button text-xs px-2 py-1 rounded-md">How to?</a>
+                                </div>
                                 <textarea name="backtest_strategy_prompt" id="backtest_strategy_prompt" rows="8" placeholder="Define your AI's backtesting logic..." required></textarea>
                             </div>
 
@@ -187,7 +190,13 @@
                         <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Paper Trading Mode</h3>
                         <form id="paperTradingForm" class="space-y-6">
                             <div><label for="live_openai_api_key" class="block text-sm font-medium mb-1">OpenAI API Key</label><input type="password" name="live_openai_api_key" id="live_openai_api_key" placeholder="sk-xxxxxxxxxx"></div>
-                            <div><label for="live_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label><textarea name="live_strategy_prompt" id="live_strategy_prompt" rows="8" placeholder="Define your AI's live paper trading logic..."></textarea></div>
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <label for="live_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
+                                    <a href="/prompt-guide" class="secondary-button text-xs px-2 py-1 rounded-md">How to?</a>
+                                </div>
+                                <textarea name="live_strategy_prompt" id="live_strategy_prompt" rows="8" placeholder="Define your AI's live paper trading logic..."></textarea>
+                            </div>
                             <div class="border-t border-gray-700 pt-6"><h4 class="text-md font-semibold text-gray-300 mb-2">Paper Trading Exchange Connection</h4><div class="space-y-4"><div><label for="paper_exchange" class="block text-sm font-medium mb-1">Select Paper Exchange</label><select name="paper_exchange" id="paper_exchange"><option value="binance_paper">Binance (Paper Account)</option><option value="bybit_paper">Bybit (Testnet/Paper)</option></select></div><div><label for="paper_api_key_live" class="block text-sm font-medium mb-1">Paper Trading API Key</label><input type="text" name="paper_api_key_live" id="paper_api_key_live" placeholder="Enter paper account API key"></div><div><label for="paper_api_secret_live" class="block text-sm font-medium mb-1">Paper Trading API Secret</label><input type="password" name="paper_api_secret_live" id="paper_api_secret_live" placeholder="Enter paper account API secret"></div><p class="text-xs text-yellow-400 mt-1 disclaimer"><strong class="font-bold">Important:</strong> Use API keys for paper trading accounts only.</p></div></div>
                             <div class="pt-4"><button type="submit" id="startPaperTradingButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Start Live Paper Session</button></div>
                         </form>
