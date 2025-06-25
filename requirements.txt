@@ -1,8 +1,9 @@
-Flask==3.0.0
-Flask-WTF
-Flask-Login
-Flask-SQLAlchemy
-passlib[argon2]
-stripe==10.0.0
-alembic
+Flask
+openai
+pandas
+matplotlib
 python-dotenv
+tqdm
+Pillow
+gunicorn
+stripe
