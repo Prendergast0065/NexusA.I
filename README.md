@@ -45,7 +45,6 @@ Cancel URL:  https://your-domain.com/payment/cancel
 The `/payment/success` endpoint can optionally verify the checkout session
 before redirecting the user back to the dashboard. Payment status is still
 confirmed via the webhook listener.
-
 During local development you can use `http://127.0.0.1:5000` in place of `https://your-domain.com`.
 
 ## Deployment
