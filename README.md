@@ -29,6 +29,8 @@ The application reads configuration from environment variables using `python-dot
 - `STRIPE_PRICE_ID` – the price ID for the checkout session
 - `STRIPE_PRICING_TABLE_ID` – pricing table ID used for the Stripe pricing table widget
 - `OPENAI_API_KEY` – optional key used by the backtester logic
+- `HOSTED_PROMPT_ID` – optional ID for an OpenAI hosted prompt
+- `HOSTED_PROMPT_VERSION` – version number for the hosted prompt (default `1`)
 - `FLASK_DEBUG` – set to `1` to enable debug mode
 
 ### Stripe pricing table
