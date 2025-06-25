@@ -38,8 +38,7 @@ def call_hosted_prompt(variables: dict, api_key: str, model: str, prompt_id: str
     client = openai.OpenAI(api_key=api_key)
     try:
         response = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version},
-            variables=variables,
+            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
             model=model,
             response_format={"type": "json_object"},
             temperature=temperature,
