@@ -112,6 +112,8 @@ def logout_page():
 
 @app.route('/checkout')
 def checkout_page():
+    if not current_user.is_authenticated:
+        return redirect(url_for('signup_page'))
     plan = request.args.get('plan', 'developer')
     return render_template('checkout.html',
                            selected_plan=plan,
