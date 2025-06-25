@@ -3,4 +3,4 @@ services:
     name: nexus-backtester
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    startCommand: "flask db upgrade && gunicorn app:app"
