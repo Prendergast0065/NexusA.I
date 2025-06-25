@@ -25,7 +25,7 @@
             <h2 class="mt-2 text-2xl font-semibold text-white">Welcome Back!</h2>
             <p class="mt-1 text-sm text-gray-400">Log in to access your AI Trading Lab.</p>
         </div>
-        <form id="loginForm" class="form-container p-8 rounded-xl shadow-2xl space-y-6">
+        <form id="loginForm" method="POST" action="/login" class="form-container p-8 rounded-xl shadow-2xl space-y-6">
             <div>
                 <label for="email" class="block text-sm font-medium mb-1">Email Address</label>
                 <input type="email" name="email" id="email" placeholder="you@example.com" required>
@@ -47,18 +47,7 @@
                 <a href="/signup" class="font-medium text-blue-500 hover:text-blue-400">Sign Up</a>
             </p>
         </form>
-        <p class="text-xs text-center text-gray-500 mt-6">(This is a mockup. Form submission is not functional.)</p>
+        <p class="text-xs text-center text-gray-500 mt-6">Login with your credentials.</p>
     </div>
-    <script>
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                alert('Mock Login Successful! Redirecting to Member Dashboard...');
-                // Redirect to the dashboard route
-                window.location.href = "/dashboard";
-            });
-        }
-    </script>
 </body>
 </html>
