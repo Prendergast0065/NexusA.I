@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
+from flask import Flask, render_template, request, jsonify, send_from_directory, url_for, redirect, session
 import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import execute_backtest_strategy  # Assuming my_backtester_logic.py is in the same directory
@@ -15,6 +18,32 @@ logging.basicConfig(level=logging.INFO,
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+# Database setup
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Login manager setup
+login_manager = LoginManager(app)
+login_manager.login_view = 'login_page'
+
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    stripe_customer_id = db.Column(db.String(120))
+    is_paid = db.Column(db.Boolean, default=False)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Create database tables if they do not exist
+with app.app_context():
+    db.create_all()
 
 # Ensure directories exist
 UPLOAD_FOLDER = 'uploads'
@@ -37,14 +66,48 @@ def home():
     return render_template('index.html')
 
 
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signup_page():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        if not email or not password:
+            return render_template('signup.html', message='Email and password required')
+        if User.query.filter_by(email=email).first():
+            return render_template('signup.html', message='User already exists')
+        try:
+            customer = stripe.Customer.create(email=email)
+            user = User(email=email,
+                        password=generate_password_hash(password),
+                        stripe_customer_id=customer['id'])
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('checkout_page'))
+        except Exception as e:
+            app.logger.error(f"Signup failed: {e}")
+            return render_template('signup.html', message='Signup failed')
     return render_template('signup.html')
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login_page():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('member_dashboard_page'))
+        return render_template('login.html', message='Invalid credentials')
     return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout_page():
+    logout_user()
+    return redirect(url_for('home'))
 
 
 @app.route('/checkout')
@@ -56,23 +119,55 @@ def checkout_page():
                            pricing_table_id=STRIPE_PRICING_TABLE_ID)
 
 
+@app.route('/success')
+@login_required
+def success_page():
+    return render_template('success.html')
+
+
 @app.route('/create-checkout-session', methods=['POST'])
+@login_required
 def create_checkout_session():
     try:
         session = stripe.checkout.Session.create(
+            customer=current_user.stripe_customer_id,
+            client_reference_id=current_user.id,
             payment_method_types=['card'],
             line_items=[{
                 'price': STRIPE_PRICE_ID,
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=url_for('member_dashboard_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            success_url=url_for('success_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=url_for('checkout_page', _external=True),
         )
-        return jsonify({'id': session.id})
+        return jsonify({'url': session.url})
     except Exception as e:
         app.logger.error(f"Stripe checkout creation failed: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.data
+    sig_header = request.headers.get('stripe-signature')
+    endpoint_secret = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except Exception as e:
+        app.logger.error(f"Webhook error: {e}")
+        return '', 400
+
+    if event['type'] == 'checkout.session.completed':
+        session_obj = event['data']['object']
+        user_id = session_obj.get('client_reference_id')
+        if user_id:
+            user = User.query.get(int(user_id))
+            if user:
+                user.is_paid = True
+                db.session.commit()
+                app.logger.info(f"User {user.email} marked as paid")
+    return '', 200
 
 
 @app.route('/how-it-works')
@@ -81,17 +176,21 @@ def how_it_works_page():
 
 
 @app.route('/dashboard')
+@login_required
 def member_dashboard_page():
-    # Add authentication check here in a real app
+    if not current_user.is_paid:
+        return redirect(url_for('checkout_page'))
     return render_template('member_dashboard.html')
 
 
 # --- API Endpoint for Backtesting ---
 @app.route('/run-backtest', methods=['POST'])
+@login_required
 def handle_run_backtest():
+    if not current_user.is_paid:
+        return jsonify({"error": "Payment required"}), 402
     if request.method == 'POST':
         app.logger.info("Received /run-backtest request")
-        # --- Authentication and plan checks would go here in a real app ---
 
         try:
             openai_key = request.form.get('backtest_openai_api_key')
