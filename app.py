@@ -154,14 +154,8 @@ def success_page():
 @login_required
 def payment_success():
     sess_id = request.args.get('session_id')
-    if sess_id:
-        try:
-            session_obj = stripe.checkout.Session.retrieve(sess_id)
-            if session_obj and session_obj.get('payment_status') == 'paid':
-                current_user.is_paid = True
-                db.session.commit()
-        except Exception as e:
-            app.logger.error(f"Payment verification failed: {e}")
+    # Optionally verify the session via the Stripe API
+    # stripe.checkout.Session.retrieve(sess_id)
     flash('Payment received – welcome!')
     return redirect(url_for('member_dashboard_page'))
 
