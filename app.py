@@ -121,7 +121,7 @@ def login_page():
         user = User.query.filter_by(email=email).first()
         if user and verify_pw(password, user.pw_hash):
             login_user(user)
-            return redirect(url_for('member_dashboard_page'))
+            return redirect(url_for('dashboard'))
         return render_template('login.html', message='Invalid credentials')
     return render_template('login.html')
 
@@ -157,7 +157,7 @@ def payment_success():
     # Optionally verify the session via the Stripe API
     # stripe.checkout.Session.retrieve(sess_id)
     flash('Payment received – welcome!')
-    return redirect(url_for('member_dashboard_page'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/payment/cancel')
@@ -219,7 +219,7 @@ def how_it_works_page():
 
 @app.route('/dashboard')
 @login_required
-def member_dashboard_page():
+def dashboard():
     if not current_user.is_paid:
         return redirect(url_for('checkout_page'))
     return render_template('member_dashboard.html')
