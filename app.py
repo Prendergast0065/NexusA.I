@@ -157,7 +157,7 @@ def payment_success():
     # Optional: verify the session via Stripe API
     # stripe.checkout.Session.retrieve(sess_id)
     flash('Payment received – welcome!')
-    return redirect(url_for('member_dashboard_page'))
+    return render_template('success.html')
 
 
 @app.route('/payment/cancel')
