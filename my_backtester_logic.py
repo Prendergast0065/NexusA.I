@@ -32,6 +32,24 @@ DEFAULT_GPT_MODEL = "gpt-4o"
 DEFAULT_API_CALL_BUFFER_SECONDS = 2
 
 
+def call_hosted_prompt(variables: dict, api_key: str, model: str, prompt_id: str, prompt_version: str,
+                       temperature: float = 0.3) -> str:
+    """Call OpenAI Hosted Prompt and return raw JSON string."""
+    client = openai.OpenAI(api_key=api_key)
+    try:
+        response = client.responses.create(
+            prompt={"id": prompt_id, "version": prompt_version},
+            variables=variables,
+            model=model,
+            response_format={"type": "json_object"},
+            temperature=temperature,
+        )
+    except Exception as exc:  # openai.Error or generic
+        logger.error(f"Hosted prompt call failed: {exc}")
+        raise
+    return response.choices[0].message.content
+
+
 # --- Technical Indicator Functions ---
 def calculate_rsi(series, period=14):
     delta = series.diff(1)
@@ -134,6 +152,7 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
                            openai_api_key_param,
                            api_call_buffer_seconds_param,
                            gpt_model_param):
+    """Return trading action using either a hosted prompt or a raw prompt."""
     openai.api_key = openai_api_key_param  # Key is set per call from parameter
 
     # Log the key being used (masked)
@@ -159,15 +178,33 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
     action, confidence, reasoning = "HOLD", 0.0, "Error in LLM call or default"
     content_from_llm = ""
 
+    hosted_prompt_id = os.getenv("HOSTED_PROMPT_ID")
+    hosted_prompt_version = os.getenv("HOSTED_PROMPT_VERSION", "1")
+
     try:
-        response = openai.chat.completions.create(
-            model=gpt_model_param,
-            messages=[{"role": "user", "content": prompt_to_send}],
-            response_format={"type": "json_object"},
-            temperature=0.3
-        )
-        content_from_llm = response.choices[0].message.content
-        logger.debug(f"GPT raw response: {content_from_llm}")
+        if hosted_prompt_id:
+            variables = {
+                "user_prompt": user_strategy_prompt_str,
+                "csv_block": formatted_data,
+                "ts": str(sub_df.index[-1])
+            }
+            content_from_llm = call_hosted_prompt(
+                variables=variables,
+                api_key=openai_api_key_param,
+                model=gpt_model_param,
+                prompt_id=hosted_prompt_id,
+                prompt_version=hosted_prompt_version,
+            )
+            logger.debug(f"Hosted prompt raw response: {content_from_llm}")
+        else:
+            response = openai.chat.completions.create(
+                model=gpt_model_param,
+                messages=[{"role": "user", "content": prompt_to_send}],
+                response_format={"type": "json_object"},
+                temperature=0.3
+            )
+            content_from_llm = response.choices[0].message.content
+            logger.debug(f"GPT raw response: {content_from_llm}")
 
         if api_call_buffer_seconds_param > 0:
             logger.debug(f"Waiting for {api_call_buffer_seconds_param}s after API call...")
