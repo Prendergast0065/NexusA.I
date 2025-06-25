@@ -342,3 +342,4 @@ if __name__ == '__main__':
     # Allow debug mode to be toggled via the FLASK_DEBUG environment variable
     debug_mode = os.environ.get('FLASK_DEBUG', '1') == '1'
     app.run(debug=debug_mode)
+
