@@ -13,7 +13,11 @@ This Flask application provides an interface for backtesting trading strategies 
    cp .env.example .env
    # edit .env and set STRIPE and OPENAI keys
    ```
-3. Run the application locally:
+3. Initialize the database using Flask-Migrate:
+   ```bash
+   flask db upgrade
+   ```
+4. Run the application locally:
    ```bash
    python app.py
    ```
