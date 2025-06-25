@@ -1,4 +1,14 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, url_for, redirect, session
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    send_from_directory,
+    url_for,
+    redirect,
+    session,
+    flash,
+)
 import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
@@ -140,6 +150,23 @@ def success_page():
     return render_template('success.html')
 
 
+@app.route('/payment/success')
+@login_required
+def payment_success():
+    sess_id = request.args.get('session_id')
+    # Optional: verify the session via Stripe API
+    # stripe.checkout.Session.retrieve(sess_id)
+    flash('Payment received – welcome!')
+    return redirect(url_for('member_dashboard_page'))
+
+
+@app.route('/payment/cancel')
+@login_required
+def payment_cancel():
+    flash('Payment cancelled.')
+    return redirect(url_for('checkout_page'))
+
+
 @app.route('/create-checkout-session', methods=['POST'])
 @login_required
 def create_checkout_session():
@@ -153,8 +180,8 @@ def create_checkout_session():
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=url_for('member_dashboard_page', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=url_for('checkout_page', _external=True),
+            success_url=url_for('payment_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=url_for('payment_cancel', _external=True),
         )
         return jsonify({'url': session.url})
     except Exception as e:
