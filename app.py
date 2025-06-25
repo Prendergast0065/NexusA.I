@@ -5,7 +5,9 @@ import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
+from passlib.hash import bcrypt
+from dotenv import load_dotenv
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import execute_backtest_strategy  # Assuming my_backtester_logic.py is in the same directory
@@ -16,24 +18,37 @@ logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s] [%(levelname)s] [FlaskAPP] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24).hex())
 
 # Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Login manager setup
 login_manager = LoginManager(app)
 login_manager.login_view = 'login_page'
 
 
+def hash_pw(password: str) -> str:
+    """Hash a plaintext password using bcrypt."""
+    return bcrypt.hash(password)
+
+
+def verify_pw(password: str, pw_hash: str) -> bool:
+    """Verify a plaintext password against a stored hash."""
+    return bcrypt.verify(password, pw_hash)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    stripe_customer_id = db.Column(db.String(120))
+    pw_hash = db.Column(db.String(255), nullable=False)
+    stripe_cus = db.Column(db.String(120))
     is_paid = db.Column(db.Boolean, default=False)
 
 
@@ -41,9 +56,7 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create database tables if they do not exist
-with app.app_context():
-    db.create_all()
+# Database tables will be created via Flask-Migrate migrations
 
 # Ensure directories exist
 UPLOAD_FOLDER = 'uploads'
@@ -78,8 +91,8 @@ def signup_page():
         try:
             customer = stripe.Customer.create(email=email)
             user = User(email=email,
-                        password=generate_password_hash(password),
-                        stripe_customer_id=customer['id'])
+                        pw_hash=hash_pw(password),
+                        stripe_cus=customer['id'])
             db.session.add(user)
             db.session.commit()
             login_user(user)
@@ -96,7 +109,7 @@ def login_page():
         email = request.form.get('email')
         password = request.form.get('password')
         user = User.query.filter_by(email=email).first()
-        if user and check_password_hash(user.password, password):
+        if user and verify_pw(password, user.pw_hash):
             login_user(user)
             return redirect(url_for('member_dashboard_page'))
         return render_template('login.html', message='Invalid credentials')
@@ -132,7 +145,7 @@ def success_page():
 def create_checkout_session():
     try:
         session = stripe.checkout.Session.create(
-            customer=current_user.stripe_customer_id,
+            customer=current_user.stripe_cus,
             client_reference_id=current_user.id,
             payment_method_types=['card'],
             line_items=[{
