@@ -71,8 +71,13 @@
                     </div>
                 </div>
                 <div class="hidden md:flex md:items-center md:space-x-4">
-                     <a href="/login" id="loginButton" class="secondary-button px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                     <a href="/signup" id="signupButton" class="cta-button text-white px-4 py-2 rounded-md text-sm font-medium shadow-md">Sign Up</a>
+                    {% if current_user.is_authenticated %}
+                        <span class="text-gray-300 text-sm">Logged in as {{ current_user.email }}</span>
+                        <a href="/logout" class="secondary-button px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    {% else %}
+                        <a href="/login" id="loginButton" class="secondary-button px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="/signup" id="signupButton" class="cta-button text-white px-4 py-2 rounded-md text-sm font-medium shadow-md">Sign Up</a>
+                    {% endif %}
                 </div>
                  <div class="-mr-2 flex md:hidden">
                     <button type="button" id="mobile-menu-button" class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
@@ -90,8 +95,13 @@
                 <a href="#pricing" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Access Plans</a>
                 <a href="/dashboard" id="memberDashboardLinkMobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Member Dashboard</a>
                 <div class="mt-2 space-y-1">
-                    <a href="/login" id="loginButtonMobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</a>
-                    <a href="/signup" id="signupButtonMobile" class="cta-button text-white block px-3 py-2 rounded-md text-base font-medium shadow-lg">Sign Up</a>
+                    {% if current_user.is_authenticated %}
+                        <span class="block px-3 py-2 text-gray-300 text-base">Logged in as {{ current_user.email }}</span>
+                        <a href="/logout" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</a>
+                    {% else %}
+                        <a href="/login" id="loginButtonMobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</a>
+                        <a href="/signup" id="signupButtonMobile" class="cta-button text-white block px-3 py-2 rounded-md text-base font-medium shadow-lg">Sign Up</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
