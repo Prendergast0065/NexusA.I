@@ -74,6 +74,9 @@ RESULTS_FOLDER = os.path.join('static', 'results')  # Ensure 'static' is at the 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
+# Default sample BTC data used when user opts in
+SAMPLE_BTC_DATA_PATH = os.path.join(app.root_path, 'btc_1min_data.csv')
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Stripe configuration
@@ -246,7 +249,7 @@ def handle_run_backtest():
         app.logger.info("Received /run-backtest request")
 
         try:
-            openai_key = request.form.get('backtest_openai_api_key')
+            openai_key = os.environ.get('OPENAI_API_KEY')
             strategy_prompt = request.form.get('backtest_strategy_prompt')
             # Default to '7' if not provided or empty, then convert to int
             num_days_str = request.form.get('backtest_days_csv', '7')
@@ -255,36 +258,45 @@ def handle_run_backtest():
             randomize_period_str = request.form.get('backtest_randomize_period_csv', 'yes')
             randomize = True if randomize_period_str.lower() == 'yes' else False
 
+            start_balance = float(request.form.get('starting_balance_usd', '10000'))
+            trade_amount_btc = float(request.form.get('trade_amount_btc', '0.01'))
+
             data_source = request.form.get('dataSource', 'csv')
             app.logger.info(f"Data source selected: {data_source}")
+            use_builtin = request.form.get('use_builtin_btc') == 'on'
+            if use_builtin:
+                app.logger.info("Using built-in BTC data")
 
             csv_file_path = None
             job_id = str(uuid.uuid4())
             app.logger.info(f"Generated Job ID: {job_id}")
 
             if not openai_key:
-                app.logger.error("OpenAI API key was not provided.")
-                return jsonify({"error": "OpenAI API Key is required."}), 400
+                app.logger.error("Server OpenAI API key not configured.")
+                return jsonify({"error": "Server OpenAI API Key missing."}), 500
             if not strategy_prompt:
                 app.logger.error("Strategy prompt was not provided.")
                 return jsonify({"error": "Strategy prompt is required."}), 400
 
             if data_source == 'csv':
-                if 'backtest_csv_data' not in request.files:
-                    app.logger.error("No CSV file part in request.")
-                    return jsonify({"error": "No CSV file part"}), 400
-                file = request.files['backtest_csv_data']
-                if file.filename == '':
-                    app.logger.error("No CSV file selected.")
-                    return jsonify({"error": "No selected CSV file"}), 400
-                if file:
-                    filename = f"{job_id}_{file.filename}"
-                    csv_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    file.save(csv_file_path)
-                    app.logger.info(f"Uploaded CSV saved to: {csv_file_path}")
-                else:  # Should not happen if filename check passes, but as a safeguard
-                    app.logger.error("File object is present but somehow invalid.")
-                    return jsonify({"error": "CSV file is invalid."}), 400
+                if use_builtin:
+                    csv_file_path = SAMPLE_BTC_DATA_PATH
+                else:
+                    if 'backtest_csv_data' not in request.files:
+                        app.logger.error("No CSV file part in request.")
+                        return jsonify({"error": "No CSV file part"}), 400
+                    file = request.files['backtest_csv_data']
+                    if file.filename == '':
+                        app.logger.error("No CSV file selected.")
+                        return jsonify({"error": "No selected CSV file"}), 400
+                    if file:
+                        filename = f"{job_id}_{file.filename}"
+                        csv_file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                        file.save(csv_file_path)
+                        app.logger.info(f"Uploaded CSV saved to: {csv_file_path}")
+                    else:  # Should not happen if filename check passes, but as a safeguard
+                        app.logger.error("File object is present but somehow invalid.")
+                        return jsonify({"error": "CSV file is invalid."}), 400
 
             elif data_source == 'exchange':
                 # This part remains conceptual as per previous discussions
@@ -314,7 +326,9 @@ def handle_run_backtest():
                 num_days_param=num_days,
                 randomize_period_from_csv_param=randomize,
                 job_id_param=job_id,
-                output_base_dir=RESULTS_FOLDER  # Ensure this is the 'static/results' path
+                output_base_dir=RESULTS_FOLDER,  # Ensure this is the 'static/results' path
+                start_balance=start_balance,
+                trade_amount_btc=trade_amount_btc
                 # api_call_buffer_seconds and gpt_model_to_use will use defaults from my_backtester_logic.py
             )
 
