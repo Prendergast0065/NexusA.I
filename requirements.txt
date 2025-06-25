@@ -7,3 +7,5 @@ tqdm
 Pillow
 gunicorn
 stripe
+Flask-Login
+Flask-SQLAlchemy

@@ -43,7 +43,10 @@
             <p class="mt-1 text-sm text-gray-400">And start exploring AI-powered strategy development.</p>
         </div>
 
-        <form id="signupForm" class="form-container p-8 rounded-xl shadow-2xl space-y-6">
+        <form id="signupForm" method="POST" action="/signup" class="form-container p-8 rounded-xl shadow-2xl space-y-6">
+            {% if message %}
+            <div class="text-red-500 text-center">{{ message }}</div>
+            {% endif %}
             <div>
                 <label for="email" class="block text-sm font-medium mb-1">Email Address</label>
                 <input type="email" name="email" id="email" placeholder="you@example.com" required>
@@ -63,35 +66,11 @@
             </div>
             <p class="text-center text-sm text-gray-400">
                 Already have an account?
-                <a href="#" id="loginLink" class="font-medium text-blue-500 hover:text-blue-400">Log In</a>
+                <a href="/login" class="font-medium text-blue-500 hover:text-blue-400">Log In</a>
             </p>
         </form>
-        <p class="text-xs text-center text-gray-500 mt-6">(This is a mockup. Form submission is not functional.)</p>
+        <p class="text-xs text-center text-gray-500 mt-6">Create an account to continue.</p>
     </div>
-
-    <script>
-        // Mock form submission
-        const signupForm = document.getElementById('signupForm');
-        if (signupForm) {
-            signupForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                // In a real app, you'd validate and send data to a backend.
-                // Then redirect to a plan selection or checkout page.
-                alert('Mock Sign Up Successful! You would now typically choose a plan.');
-                // For this mockup, let's pretend it redirects to a conceptual checkout page
-                // window.location.href = "checkout.html?plan=developer"; // Example redirect
-            });
-        }
-        // Conceptual link to login page
-        const loginLink = document.getElementById('loginLink');
-        if (loginLink) {
-            loginLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                alert("Conceptual: Redirecting to Login Page...");
-                // window.location.href = "login.html";
-            });
-        }
-    </script>
 
 </body>
 </html>
