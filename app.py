@@ -28,6 +28,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
+STRIPE_PRICING_TABLE_ID = os.environ.get('STRIPE_PRICING_TABLE_ID', '')
 
 
 # --- Routes to serve your HTML pages ---
@@ -51,7 +52,8 @@ def checkout_page():
     plan = request.args.get('plan', 'developer')
     return render_template('checkout.html',
                            selected_plan=plan,
-                           publishable_key=STRIPE_PUBLISHABLE_KEY)
+                           publishable_key=STRIPE_PUBLISHABLE_KEY,
+                           pricing_table_id=STRIPE_PRICING_TABLE_ID)
 
 
 @app.route('/create-checkout-session', methods=['POST'])
