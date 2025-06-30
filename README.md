@@ -49,3 +49,7 @@ During local development you can use `http://127.0.0.1:5000` in place of `https:
 ## Deployment
 
 A simple `render.yaml` is included for deployment to Render. Adjust the environment variables there as needed.
+
+## Viewing Users
+
+Once logged in, the account `prendergast307@gmail.com` can visit `/users` to see a table of all registered accounts. Other logged in users will receive a 403 error. The page displays each user's ID, email and whether they have completed payment.
