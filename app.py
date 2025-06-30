@@ -33,9 +33,13 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24).hex())
 
-# Database setup
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# prefer DATABASE_URL if it’s set; otherwise write/read the SQLite file on the disk
+data_dir = os.getenv("DATA_DIR", "/data")          # defined in render.yaml
+sqlite_path = f"sqlite:///{data_dir}/app.db"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", sqlite_path)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
