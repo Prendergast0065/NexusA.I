@@ -32,6 +32,7 @@ The application reads configuration from environment variables using `python-dot
 - `HOSTED_PROMPT_ID` – optional ID for an OpenAI hosted prompt
 - `HOSTED_PROMPT_VERSION` – version number for the hosted prompt (default `1`)
 - `FLASK_DEBUG` – set to `1` to enable debug mode
+- `ADMIN_EMAIL` – email address allowed to access the `/users` page (default `harry.prendergast307@gmail.com`)
 
 ### Stripe pricing table
 
@@ -52,4 +53,6 @@ A simple `render.yaml` is included for deployment to Render. Adjust the environm
 
 ## Viewing Users
 
-Once logged in, you can visit `/users` to see a table of all registered accounts. The page displays each user's ID, email and whether they have completed payment.
+The `/users` page lists all registered accounts, showing each user's ID, email
+and payment status. Access to this page is restricted to the address specified
+by `ADMIN_EMAIL`.

@@ -8,6 +8,7 @@ from flask import (
     redirect,
     session,
     flash,
+    abort,
 )
 import os
 import uuid  # For generating unique job IDs
@@ -88,6 +89,9 @@ stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
 STRIPE_PRICING_TABLE_ID = os.environ.get('STRIPE_PRICING_TABLE_ID', '')
+
+# Email allowed to view the /users page
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'harry.prendergast307@gmail.com')
 
 
 # --- Routes to serve your HTML pages ---
@@ -239,6 +243,8 @@ def prompt_guide_page():
 @login_required
 def list_users_page():
     """Display a simple table of registered users."""
+    if current_user.email != ADMIN_EMAIL:
+        abort(403)
     users = User.query.all()
     return render_template('users.html', users=users)
 
