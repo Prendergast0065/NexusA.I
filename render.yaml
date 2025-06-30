@@ -1,6 +1,17 @@
 services:
   - type: web
     name: nexus-backtester
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "flask db upgrade && gunicorn app:app"
+    runtime: python        # “env: python” → “runtime:” in new spec
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: |
+      flask db upgrade && gunicorn app:app
+
+    disk:                  # ← add this block
+      name: data           # arbitrary label
+      mountPath: /data     # absolute, non-root path
+      sizeGB: 1            # first 1 GB is free on Render
+
+    envVars:
+      - key: DATA_DIR      # optional; lets app find the disk path
+        value: /data
