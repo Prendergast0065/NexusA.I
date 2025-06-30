@@ -235,6 +235,14 @@ def prompt_guide_page():
     return render_template('prompt_guide.html')
 
 
+@app.route('/users')
+@login_required
+def list_users_page():
+    """Display a simple table of registered users."""
+    users = User.query.all()
+    return render_template('users.html', users=users)
+
+
 @app.route('/dashboard')
 @login_required
 def member_dashboard_page():
