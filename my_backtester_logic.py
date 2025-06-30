@@ -5,6 +5,7 @@ matplotlib.use('Agg')  # Non-interactive backend for Matplotlib
 import matplotlib.pyplot as plt
 import os
 import openai
+from openai import OpenAI
 import time
 import logging
 import json
@@ -32,18 +33,25 @@ DEFAULT_GPT_MODEL = "gpt-4o"
 DEFAULT_API_CALL_BUFFER_SECONDS = 2
 
 
-def call_hosted_prompt(variables: dict, temperature=0.3):
-    client = OpenAI()
+def call_hosted_prompt(
+    variables: dict,
+    *,
+    api_key: str,
+    model: str,
+    prompt_id: str,
+    prompt_version: str,
+    temperature: float = 0.3,
+):
+    """Execute an OpenAI hosted prompt and return the raw JSON string."""
 
-    # build full prompt text yourself
-    prompt_text = PROMPT_TEMPLATE.format(**variables)
+    client = OpenAI(api_key=api_key)
 
-    resp = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt_text}],
+    resp = client.responses.create(
+        prompt={"id": prompt_id, "version": prompt_version},
+        variables=variables,
+        model=model,
         response_format={"type": "json_object"},
         temperature=temperature,
-        max_tokens=256,
     )
     return resp.choices[0].message.content
 
