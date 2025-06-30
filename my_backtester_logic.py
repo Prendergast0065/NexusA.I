@@ -32,21 +32,21 @@ DEFAULT_GPT_MODEL = "gpt-4o"
 DEFAULT_API_CALL_BUFFER_SECONDS = 2
 
 
-def call_hosted_prompt(variables: dict, api_key: str, model: str, prompt_id: str, prompt_version: str,
-                       temperature: float = 0.3) -> str:
-    """Call OpenAI Hosted Prompt and return raw JSON string."""
-    client = openai.OpenAI(api_key=api_key)
-    try:
-        response = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
-            model=model,
-            response_format={"type": "json_object"},
-            temperature=temperature,
-        )
-    except Exception as exc:  # openai.Error or generic
-        logger.error(f"Hosted prompt call failed: {exc}")
-        raise
-    return response.choices[0].message.content
+def call_hosted_prompt(variables: dict, temperature=0.3):
+    client = OpenAI()
+
+    # build full prompt text yourself
+    prompt_text = PROMPT_TEMPLATE.format(**variables)
+
+    resp = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt_text}],
+        response_format={"type": "json_object"},
+        temperature=temperature,
+        max_tokens=256,
+    )
+    return resp.choices[0].message.content
+
 
 
 # --- Technical Indicator Functions ---
