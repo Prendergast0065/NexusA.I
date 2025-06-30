@@ -8,6 +8,7 @@ from flask import (
     redirect,
     session,
     flash,
+    abort,
 )
 import os
 import uuid  # For generating unique job IDs
@@ -239,6 +240,8 @@ def prompt_guide_page():
 @login_required
 def list_users_page():
     """Display a simple table of registered users."""
+    if current_user.email != 'prendergast307@gmail.com':
+        abort(403)
     users = User.query.all()
     return render_template('users.html', users=users)
 
