@@ -32,7 +32,7 @@
                 <div class="order-summary p-6 rounded-lg space-y-3">
                     <div class="flex justify-between"><span class="text-gray-400">Selected Plan:</span><span id="selectedPlanName" class="font-medium text-white">Strategy Developer Pack</span></div>
                     <div class="flex justify-between"><span class="text-gray-400">Evaluation Frequency:</span><span id="evaluationFrequency" class="font-medium text-white">Every 30 minutes</span></div>
-                    <div class="flex justify-between border-t border-gray-700 pt-3 mt-3"><span class="text-lg font-semibold text-white">Total (One-Time):</span><span id="totalPrice" class="text-lg font-bold text-blue-400">$X</span></div>
+                    <div class="flex justify-between border-t border-gray-700 pt-3 mt-3"><span class="text-lg font-semibold text-white">Total (One-Time):</span><span id="totalPrice" class="text-lg font-bold text-blue-400">40 NZD</span></div>
                 </div>
             </div>
             <div class="disclaimer"><p><strong>Note:</strong> Payments are handled securely via Stripe. You will be redirected to complete checkout.</p></div>
@@ -57,9 +57,9 @@
         const evaluationFrequencyEl = document.getElementById('evaluationFrequency');
         const totalPriceEl = document.getElementById('totalPrice');
         if (plan === 'analyst') {
-            selectedPlanNameEl.textContent = 'High-Frequency Analyst Pack'; evaluationFrequencyEl.textContent = 'Every 2 minutes'; totalPriceEl.textContent = '$15X';
+            selectedPlanNameEl.textContent = 'High-Frequency Analyst Pack'; evaluationFrequencyEl.textContent = 'Every 2 minutes'; totalPriceEl.textContent = '1000 NZD';
         } else { // Default to developer pack or if no plan param
-            selectedPlanNameEl.textContent = 'Strategy Developer Pack'; evaluationFrequencyEl.textContent = 'Every 30 minutes'; totalPriceEl.textContent = '$X';
+            selectedPlanNameEl.textContent = 'Strategy Developer Pack'; evaluationFrequencyEl.textContent = 'Every 30 minutes'; totalPriceEl.textContent = '40 NZD';
         }
         const proceedButton = document.getElementById('proceedToPaymentButton');
         const pricingContainer = document.getElementById('stripePricingTable');
