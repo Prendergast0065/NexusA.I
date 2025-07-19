@@ -200,7 +200,7 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
             variables = {
                 "strategy_prompt": user_strategy_prompt_str,
                 "data_block": formatted_data,
-                "user_message": ""
+                "user_message": "json"
             }
             content_from_llm = call_hosted_prompt(
                 variables=variables,
