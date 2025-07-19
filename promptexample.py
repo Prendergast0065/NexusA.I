@@ -18,6 +18,7 @@ Environment variables required:
     HOSTED_PROMPT_ID      – e.g. pmpt_685c013c93a08190906c7cb7cd2273f70aeb15fcd156bf5f
     HOSTED_PROMPT_VERSION – e.g. 1
 """
+
 from __future__ import annotations
 
 import os
@@ -26,12 +27,16 @@ import sys
 import argparse
 from datetime import date
 
-from openai import OpenAI, Error
+from openai import OpenAIError
+from openai_utils import call_hosted_prompt
 
 # ----- Helpers -------------------------------------------------------------- #
 
+
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Generate buy/sell signal via OpenAI hosted prompt")
+    p = argparse.ArgumentParser(
+        description="Generate buy/sell signal via OpenAI hosted prompt"
+    )
 
     # market variables
     p.add_argument("--price", type=float, required=False)
@@ -41,11 +46,19 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--rsi-14", dest="rsi_14", type=float, required=False)
     p.add_argument("--atr-14", dest="atr_14", type=float, required=False)
     p.add_argument("--macd", type=float, required=False)
-    p.add_argument("--bollinger-upper", dest="bollinger_upper", type=float, required=False)
-    p.add_argument("--bollinger-lower", dest="bollinger_lower", type=float, required=False)
+    p.add_argument(
+        "--bollinger-upper", dest="bollinger_upper", type=float, required=False
+    )
+    p.add_argument(
+        "--bollinger-lower", dest="bollinger_lower", type=float, required=False
+    )
 
-    p.add_argument("--prompt", required=True, help="Natural‑language instruction for the model")
-    p.add_argument("--model", default="gpt-4o", help="Override model if dashboard allows")
+    p.add_argument(
+        "--prompt", required=True, help="Natural‑language instruction for the model"
+    )
+    p.add_argument(
+        "--model", default="gpt-4o", help="Override model if dashboard allows"
+    )
     p.add_argument("--temperature", type=float, default=0.3)
     return p.parse_args()
 
@@ -53,8 +66,15 @@ def parse_args() -> argparse.Namespace:
 def collect_interactively(ns: argparse.Namespace):
     """Ask for missing values via input()"""
     fields = [
-        "price", "volume", "sma_10", "sma_50", "rsi_14",
-        "atr_14", "macd", "bollinger_upper", "bollinger_lower",
+        "price",
+        "volume",
+        "sma_10",
+        "sma_50",
+        "rsi_14",
+        "atr_14",
+        "macd",
+        "bollinger_upper",
+        "bollinger_lower",
     ]
     for f in fields:
         if getattr(ns, f) is None:
@@ -70,9 +90,8 @@ def build_variables(ns: argparse.Namespace) -> dict[str, str | float]:
     """Return variables using names expected by the hosted prompt."""
     return {
         "strategy_prompt": ns.prompt,
-        "data_block": "",       # optional placeholder for market data
+        "data_block": "",  # optional placeholder for market data
         "user_message": "",
-
         "ts": str(date.today()),
         "price": ns.price,
         "volume": ns.volume,
@@ -87,25 +106,29 @@ def build_variables(ns: argparse.Namespace) -> dict[str, str | float]:
 
 
 def call_openai(variables: dict, model: str, temperature: float) -> str:
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    api_key = os.getenv("OPENAI_API_KEY")
     prompt_id = os.getenv("HOSTED_PROMPT_ID")
     prompt_version = os.getenv("HOSTED_PROMPT_VERSION", "1")
-    if not all([prompt_id, os.getenv("OPENAI_API_KEY")]):
-        raise RuntimeError("OPENAI_API_KEY and HOSTED_PROMPT_ID must be set in env vars")
+    if not all([api_key, prompt_id]):
+        raise RuntimeError(
+            "OPENAI_API_KEY and HOSTED_PROMPT_ID must be set in env vars"
+        )
 
     try:
-        resp = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
+        return call_hosted_prompt(
+            variables,
+            api_key=api_key,
             model=model,
+            prompt_id=prompt_id,
+            prompt_version=prompt_version,
             temperature=temperature,
         )
-    except Error as exc:
+    except OpenAIError as exc:
         raise RuntimeError(f"OpenAI error: {exc}")
-
-    return resp.choices[0].message.content
 
 
 # ----- main ---------------------------------------------------------------- #
+
 
 def main():
     ns = parse_args()
