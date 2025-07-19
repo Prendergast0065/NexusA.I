@@ -67,10 +67,11 @@ def collect_interactively(ns: argparse.Namespace):
 
 
 def build_variables(ns: argparse.Namespace) -> dict[str, str | float]:
+    """Return variables using names expected by the hosted prompt."""
     return {
-        "user_prompt": ns.prompt,
-        "template_block": "",                 # optional; kept for compatibility
-        "csv_block": "",                      # optional
+        "strategy_prompt": ns.prompt,
+        "data_block": "",       # optional placeholder for market data
+        "user_message": "",
 
         "ts": str(date.today()),
         "price": ns.price,

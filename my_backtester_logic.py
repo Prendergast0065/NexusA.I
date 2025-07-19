@@ -196,9 +196,11 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
 
     try:
         if hosted_prompt_id:
+            # Match variable names expected by the hosted prompt template
             variables = {
-                "user_prompt": user_strategy_prompt_str,
-                "csv_block": formatted_data,
+                "strategy_prompt": user_strategy_prompt_str,
+                "data_block": formatted_data,
+                "user_message": "",
                 "ts": str(sub_df.index[-1])
             }
             content_from_llm = call_hosted_prompt(
