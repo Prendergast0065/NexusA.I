@@ -187,6 +187,12 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
     prompt_to_send = prompt_to_send.replace("{{TRADE_AMOUNT_BTC}}", f"{trade_amount_btc_val:.8f}")
     prompt_to_send = prompt_to_send.replace("{{ENTRY_PRICE}}", f"{current_entry_price:.2f}")
 
+    # Ensure the prompt explicitly includes the word "json" so the model
+    # reliably returns a JSON response. This requirement cannot rely on a
+    # variable; we append the literal string if it's missing.
+    if "json" not in prompt_to_send.lower():
+        prompt_to_send += "\njson"
+
     logger.debug(f"Populated prompt for GPT (first 500 chars):\n{prompt_to_send[:500]}...")
     action, confidence, reasoning = "HOLD", 0.0, "Error in LLM call or default"
     content_from_llm = ""
@@ -213,7 +219,7 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
         else:
             response = openai.chat.completions.create(
                 model=gpt_model_param,
-                messages=[{"role": "user", "content": (prompt_to_send, "json")}],
+                messages=[{"role": "user", "content": prompt_to_send}],
                 response_format={"type": "json_object"},
                 temperature=0.3
             )
