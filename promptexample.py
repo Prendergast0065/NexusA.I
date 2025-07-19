@@ -97,14 +97,6 @@ def call_openai(variables: dict, model: str, temperature: float) -> str:
         resp = client.responses.create(
             prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
             model=model,
-            response_format={"type": "json_object"},
-            temperature=temperature,
-        )
-    except TypeError:
-        # Fallback for older openai versions without response_format support
-        resp = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
-            model=model,
             temperature=temperature,
         )
     except Error as exc:
