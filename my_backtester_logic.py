@@ -47,7 +47,8 @@ def call_hosted_prompt(
     client = OpenAI(api_key=api_key)
     try:
         resp = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
+            prompt={"id": prompt_id, "version": prompt_version},
+            variables=variables,
             model=model,
             response_format={"type": "json_object"},
             temperature=temperature,
@@ -55,7 +56,8 @@ def call_hosted_prompt(
     except TypeError:
         # Older openai versions do not support response_format
         resp = client.responses.create(
-            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
+            prompt={"id": prompt_id, "version": prompt_version},
+            variables=variables,
             model=model,
             temperature=temperature,
         )
@@ -200,8 +202,7 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
             variables = {
                 "strategy_prompt": user_strategy_prompt_str,
                 "data_block": formatted_data,
-                "user_message": "",
-                "ts": str(sub_df.index[-1])
+                "user_message": ""
             }
             content_from_llm = call_hosted_prompt(
                 variables=variables,
