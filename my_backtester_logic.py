@@ -42,15 +42,38 @@ def call_hosted_prompt(
     prompt_version: str,
     temperature: float = 0.3,
 ):
-    """Execute an OpenAI hosted prompt and return the raw JSON string."""
+    """Execute a hosted prompt using chat completions and return the JSON string."""
 
     client = OpenAI(api_key=api_key)
-    resp = client.responses.create(
-        prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
-        model=model,
-        temperature=temperature,
+
+    prompt_text = client.prompts.retrieve(prompt_id, version=prompt_version).text
+
+    system_msg = (
+        prompt_text
+        .replace("{{data_block}}", variables.get("data_block", ""))
+        .replace("{{strategy_prompt}}", variables.get("strategy_prompt", ""))
     )
-    return resp.output_text
+
+    messages = [
+        {"role": "user", "content": "json"},
+        {"role": "system", "content": system_msg},
+    ]
+
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=temperature,
+        )
+    except TypeError:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+        )
+
+    return resp.choices[0].message.content
 
 
 
