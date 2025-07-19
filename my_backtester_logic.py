@@ -45,13 +45,20 @@ def call_hosted_prompt(
     """Execute an OpenAI hosted prompt and return the raw JSON string."""
 
     client = OpenAI(api_key=api_key)
-
-    resp = client.responses.create(
-        prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
-        model=model,
-        response_format={"type": "json_object"},
-        temperature=temperature,
-    )
+    try:
+        resp = client.responses.create(
+            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
+            model=model,
+            response_format={"type": "json_object"},
+            temperature=temperature,
+        )
+    except TypeError:
+        # Older openai versions do not support response_format
+        resp = client.responses.create(
+            prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
+            model=model,
+            temperature=temperature,
+        )
     return resp.choices[0].message.content
 
 
