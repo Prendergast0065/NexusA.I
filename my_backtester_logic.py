@@ -213,7 +213,7 @@ def get_gpt_action_for_web(sub_df, current_balance, current_btc_holdings,
         else:
             response = openai.chat.completions.create(
                 model=gpt_model_param,
-                messages=[{"role": "user", "content": prompt_to_send}],
+                messages=[{"role": "user", "content": (prompt_to_send, "json")}],
                 response_format={"type": "json_object"},
                 temperature=0.3
             )
