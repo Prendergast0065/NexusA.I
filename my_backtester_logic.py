@@ -34,7 +34,7 @@ if not logger.handlers:
 logger.setLevel(logging.INFO)
 
 DEFAULT_GPT_MODEL = "gpt-4o"
-DEFAULT_API_CALL_BUFFER_SECONDS = 2
+DEFAULT_API_CALL_BUFFER_SECONDS = 0
 
 
 # --- Technical Indicator Functions ---
@@ -254,10 +254,7 @@ def get_gpt_action_for_web(
             content_from_llm = response.choices[0].message.content
             logger.debug(f"GPT raw response: {content_from_llm}")
 
-        if (
-            api_call_buffer_seconds_param > 0
-            and os.getenv("ENABLE_API_CALL_BUFFER", "0") == "1"
-        ):
+        if api_call_buffer_seconds_param > 0 and not os.getenv("RENDER"):
             logger.debug(
                 f"Waiting for {api_call_buffer_seconds_param}s after API call..."
             )
@@ -269,15 +266,18 @@ def get_gpt_action_for_web(
             raise ValueError(f"Hosted prompt omitted keys: {missing}")
 
         action = str(result["action"]).upper()
-        raw_confidence = float(result["confidence"])
-        if 0.0 <= raw_confidence <= 1.0:
-            raw_confidence *= 100.0
-        confidence = max(0.0, min(100.0, raw_confidence))
+        # ── normalise confidence to 0–100 ───────────────────────────
+        confidence = float(result.get("confidence", 0.0))
+        if 0 <= confidence <= 1:
+            confidence *= 100
+        confidence = max(0.0, min(confidence, 100.0))
         reasoning = str(result["reasoning"])
 
+        # warn instead of raise
         if confidence < 1.0:
             logger.warning(
-                "LLM returned <1% confidence – treating result as unreliable."
+                "LLM confidence <1%% (%.2f); treating as low-confidence HOLD",
+                confidence,
             )
 
         if action not in ["BUY", "SELL", "HOLD"]:

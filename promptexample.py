@@ -123,15 +123,6 @@ def call_openai(variables: dict, model: str, temperature: float) -> str:
             prompt_version=prompt_version,
             temperature=temperature,
             input_message="Respond only in valid json.",
-            schema={
-                "type": "object",
-                "properties": {
-                    "action": {"type": "string"},
-                    "confidence": {"type": "number"},
-                    "reasoning": {"type": "string"},
-                },
-                "required": ["action", "confidence", "reasoning"],
-            },
         )
     except OpenAIError as exc:
         raise RuntimeError(f"OpenAI error: {exc}")
