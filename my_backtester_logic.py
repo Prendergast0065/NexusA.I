@@ -237,10 +237,7 @@ def get_gpt_action_for_web(
                 prompt_id=hosted_prompt_id,
                 variables=variables,
                 prompt_version=hosted_prompt_version,
-                input_message="Respond only in valid json.",
-
-                    "required": ["action", "confidence", "reasoning"],
-                },
+                input_message="Respond only in valid json."
             )
             logger.debug(f"Hosted prompt raw response: {content_from_llm}")
         else:
