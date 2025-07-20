@@ -15,3 +15,5 @@ services:
     envVars:
       - key: DATA_DIR      # optional; lets app find the disk path
         value: /data
+      - key: GUNICORN_CMD_ARGS
+        value: "--timeout 120"
