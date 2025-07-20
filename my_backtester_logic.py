@@ -254,7 +254,10 @@ def get_gpt_action_for_web(
             content_from_llm = response.choices[0].message.content
             logger.debug(f"GPT raw response: {content_from_llm}")
 
-        if api_call_buffer_seconds_param > 0:
+        if (
+            api_call_buffer_seconds_param > 0
+            and os.getenv("ENABLE_API_CALL_BUFFER", "0") == "1"
+        ):
             logger.debug(
                 f"Waiting for {api_call_buffer_seconds_param}s after API call..."
             )
@@ -266,11 +269,16 @@ def get_gpt_action_for_web(
             raise ValueError(f"Hosted prompt omitted keys: {missing}")
 
         action = str(result["action"]).upper()
-        confidence = max(0.0, min(100.0, float(result["confidence"])))
+        raw_confidence = float(result["confidence"])
+        if 0.0 <= raw_confidence <= 1.0:
+            raw_confidence *= 100.0
+        confidence = max(0.0, min(100.0, raw_confidence))
         reasoning = str(result["reasoning"])
 
         if confidence < 1.0:
-            raise ValueError("LLM returned <1% confidence – treat as malformed.")
+            logger.warning(
+                "LLM returned <1% confidence – treating result as unreliable."
+            )
 
         if action not in ["BUY", "SELL", "HOLD"]:
             logger.warning(
