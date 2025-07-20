@@ -116,12 +116,13 @@ def call_openai(variables: dict, model: str, temperature: float) -> str:
 
     try:
         return call_hosted_prompt(
-            variables,
             api_key=api_key,
             model=model,
             prompt_id=prompt_id,
+            variables=variables,
             prompt_version=prompt_version,
             temperature=temperature,
+            input_message="Respond only in valid json.",
         )
     except OpenAIError as exc:
         raise RuntimeError(f"OpenAI error: {exc}")

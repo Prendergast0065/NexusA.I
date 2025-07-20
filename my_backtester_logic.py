@@ -87,7 +87,7 @@ def load_and_prepare_data_from_path(
         max_ts_in_data = df_full_history.index.max()
         if (max_ts_in_data - min_ts_in_data) < window_duration:
             logger.warning(
-                f"Total duration in CSV < requested duration. Using entire CSV."
+                "Total duration in CSV < requested duration. Using entire CSV."
             )
             df_selected_period = df_full_history.copy()
         else:
@@ -229,14 +229,15 @@ def get_gpt_action_for_web(
             variables = {
                 "strategy_prompt": user_strategy_prompt_str,
                 "data_block": formatted_data,
-                "user_message": "json",
+                "user_message": "",
             }
             content_from_llm = call_hosted_prompt(
-                variables=variables,
                 api_key=openai_api_key_param,
                 model=gpt_model_param,
                 prompt_id=hosted_prompt_id,
+                variables=variables,
                 prompt_version=hosted_prompt_version,
+                input_message="Respond only in valid json.",
             )
             logger.debug(f"Hosted prompt raw response: {content_from_llm}")
         else:
