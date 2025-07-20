@@ -238,13 +238,7 @@ def get_gpt_action_for_web(
                 variables=variables,
                 prompt_version=hosted_prompt_version,
                 input_message="Respond only in valid json.",
-                schema={
-                    "type": "object",
-                    "properties": {
-                        "action": {"type": "string"},
-                        "confidence": {"type": "number"},
-                        "reasoning": {"type": "string"},
-                    },
+
                     "required": ["action", "confidence", "reasoning"],
                 },
             )
