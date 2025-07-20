@@ -31,6 +31,7 @@ The application reads configuration from environment variables using `python-dot
 - `OPENAI_API_KEY` – optional key used by the backtester logic
 - `HOSTED_PROMPT_ID` – optional ID for an OpenAI hosted prompt
 - `HOSTED_PROMPT_VERSION` – version number for the hosted prompt (default `1`)
+- `ENABLE_API_CALL_BUFFER` – set to `1` to wait after LLM calls (default disables delay)
 - `FLASK_DEBUG` – set to `1` to enable debug mode
 - `ADMIN_EMAIL` – email address allowed to access the `/users` page (default `harry.prendergast307@gmail.com`)
 
