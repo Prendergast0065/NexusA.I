@@ -6,8 +6,8 @@ from app import hash_pw, verify_pw
 
 
 def test_password_roundtrip():
-    pw = 'secret123'
+    pw = "secret123"
     hashed = hash_pw(pw)
     assert hashed != pw
     assert verify_pw(pw, hashed) is True
-    assert verify_pw('wrong', hashed) is False
+    assert verify_pw("wrong", hashed) is False
