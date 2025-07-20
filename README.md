@@ -34,6 +34,7 @@ The application reads configuration from environment variables using `python-dot
 - `ENABLE_API_CALL_BUFFER` – set to `1` to wait after LLM calls (default disables delay)
 - `FLASK_DEBUG` – set to `1` to enable debug mode
 - `ADMIN_EMAIL` – email address allowed to access the `/users` page (default `harry.prendergast307@gmail.com`)
+- `GUNICORN_CMD_ARGS` – set to "--timeout 120" for gunicorn timeout
 
 ### Stripe pricing table
 
