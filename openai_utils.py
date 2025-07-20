@@ -12,6 +12,7 @@ def call_hosted_prompt(
     prompt_version: str = "1",
     temperature: float = 0.3,
     input_message: str = "Please respond in valid json.",
+    schema: dict | None = None,
 ) -> str:
     """Execute a hosted prompt and return the output text.
 
@@ -20,10 +21,15 @@ def call_hosted_prompt(
     """
 
     client = OpenAI(api_key=api_key)
+    kwargs = {}
+    if schema is not None:
+        kwargs["json_schema"] = schema
+
     resp = client.responses.create(
         prompt={"id": prompt_id, "version": prompt_version, "variables": variables},
         model=model,
         input=input_message,
         temperature=temperature,
+        **kwargs,
     )
     return resp.output_text

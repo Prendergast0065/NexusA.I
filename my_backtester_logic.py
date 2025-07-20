@@ -238,6 +238,15 @@ def get_gpt_action_for_web(
                 variables=variables,
                 prompt_version=hosted_prompt_version,
                 input_message="Respond only in valid json.",
+                schema={
+                    "type": "object",
+                    "properties": {
+                        "action": {"type": "string"},
+                        "confidence": {"type": "number"},
+                        "reasoning": {"type": "string"},
+                    },
+                    "required": ["action", "confidence", "reasoning"],
+                },
             )
             logger.debug(f"Hosted prompt raw response: {content_from_llm}")
         else:
@@ -261,9 +270,17 @@ def get_gpt_action_for_web(
             time.sleep(api_call_buffer_seconds_param)
 
         result = json.loads(content_from_llm)
-        action = result.get("action", "HOLD").upper()
-        confidence = float(result.get("confidence", 0.0))
-        reasoning = result.get("reasoning", "No reasoning provided by LLM.")
+        missing = [k for k in ["action", "confidence", "reasoning"] if k not in result]
+        if missing:
+            raise ValueError(f"Hosted prompt omitted keys: {missing}")
+
+        action = str(result["action"]).upper()
+        confidence = max(0.0, min(100.0, float(result["confidence"])))
+        reasoning = str(result["reasoning"])
+
+        if confidence < 1.0:
+            raise ValueError("LLM returned <1% confidence – treat as malformed.")
+
         if action not in ["BUY", "SELL", "HOLD"]:
             logger.warning(
                 f"LLM returned invalid action: '{action}'. Defaulting to HOLD."
