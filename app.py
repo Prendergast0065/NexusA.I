@@ -13,7 +13,6 @@ import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
-import redis
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -55,9 +54,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Redis progress tracking
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-redis_client = redis.Redis.from_url(redis_url)
+# In-memory progress tracking for backtest jobs
+# Maps job_id -> percentage integer
+job_progress = {}
 
 # Login manager setup
 login_manager = LoginManager(app)
@@ -311,9 +310,9 @@ def handle_run_backtest():
                 app.logger.info("Using built-in BTC data")
 
             csv_file_path = None
-            job_id = str(uuid.uuid4())
+            job_id = request.form.get("job_id") or str(uuid.uuid4())
             app.logger.info(f"Generated Job ID: {job_id}")
-            redis_client.set(f"progress:{job_id}", 0)
+            job_progress[job_id] = 0
 
             if not openai_key:
                 app.logger.error("Server OpenAI API key not configured.")
@@ -385,7 +384,7 @@ def handle_run_backtest():
                 start_balance=start_balance,
                 trade_amount_btc=trade_amount_btc,
                 # api_call_buffer_seconds and gpt_model_to_use will use defaults from my_backtester_logic.py
-                progress_callback=lambda pct: redis_client.set(f"progress:{job_id}", pct),
+                progress_callback=lambda pct: job_progress.__setitem__(job_id, pct),
             )
 
             if "error" in backtest_results_data:
@@ -419,8 +418,8 @@ def handle_run_backtest():
 
 
 @app.route("/status/<job_id>")
-def progress(job_id):
-    pct = int(redis_client.get(f"progress:{job_id}") or 0)
+def get_job_status(job_id):
+    pct = int(job_progress.get(job_id, 0))
     return jsonify({"pct": pct})
 
 

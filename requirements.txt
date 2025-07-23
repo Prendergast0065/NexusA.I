@@ -11,4 +11,3 @@ matplotlib
 tqdm
 pillow
 gunicorn
-redis
