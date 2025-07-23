@@ -324,6 +324,7 @@ def execute_backtest_strategy(
     take_profit_atr_multiplier=3.0,
     api_call_buffer_seconds=DEFAULT_API_CALL_BUFFER_SECONDS,
     gpt_model=DEFAULT_GPT_MODEL,
+    progress_callback=None,
 ):
     logger.info(
         f"[{job_id_param}] Initializing backtest. OpenAI Key: {'Provided' if openai_api_key_param else 'MISSING'}"
@@ -382,6 +383,9 @@ def execute_backtest_strategy(
                 )
                 current_time += decision_window
                 pbar.update(1)
+                if progress_callback:
+                    pct = int(pbar.n / total_steps * 100)
+                    progress_callback(pct)
                 continue
 
             execution_price = current_market_data_df["close"].iloc[-1]
@@ -509,12 +513,18 @@ def execute_backtest_strategy(
                 (current_time, balance_usd + (btc_holdings * execution_price))
             )
             pbar.update(1)
+            if progress_callback:
+                pct = int(pbar.n / total_steps * 100)
+                progress_callback(pct)
             pbar.set_postfix(
                 {"Equity": f"${portfolio_history[-1][1]:.2f}", "Last": log_display},
                 refresh=True,
             )
             if current_time == simulation_end_time and pbar.n < pbar.total:
                 pbar.update(pbar.total - pbar.n)
+                if progress_callback:
+                    pct = int(pbar.n / total_steps * 100)
+                    progress_callback(pct)
             current_time += decision_window
             if (
                 not portfolio_history
@@ -617,6 +627,8 @@ def execute_backtest_strategy(
     )
 
     logger.info(f"[{job_id_param}] Backtest finished. Final Equity: {final_equity:.2f}")
+    if progress_callback:
+        progress_callback(100)
     return {
         "equity_curve_url": f"/static/results/{job_id_param}/{equity_curve_filename}",
         "trade_log_url": f"/static/results/{job_id_param}/{trade_log_filename}",
