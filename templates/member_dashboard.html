@@ -193,7 +193,6 @@
 
                             <div class="pt-4">
                                 <button type="submit" id="runBacktestButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Run Backtest</button>
-                                <progress id="bt-bar" value="0" max="100" class="w-full h-2 bg-gray-700 mt-2 hidden"></progress>
                             </div>
                         </form>
                     </div>
@@ -285,26 +284,6 @@
         const totalTradesText = document.getElementById('totalTradesText');
         const tradeLogLink = document.getElementById('tradeLogLink');
         const equityCurveLink = document.getElementById('equityCurveLink');
-        const progressBar = document.getElementById('bt-bar');
-
-        function watchProgress(jobId) {
-            if (!progressBar) return;
-            progressBar.hidden = false;
-            progressBar.value = 0;
-            const interval = setInterval(async () => {
-                try {
-                    const res = await fetch(`/status/${jobId}`);
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    progressBar.value = data.pct;
-                    if (data.pct >= 100) {
-                        clearInterval(interval);
-                    }
-                } catch (err) {
-                    console.error('Progress poll failed', err);
-                }
-            }, 1000);
-        }
 
         if (backtestingForm) {
             backtestingForm.addEventListener('submit', async function(event) {
@@ -320,10 +299,6 @@
                 resultsArea.classList.remove('hidden');
 
                 const formData = new FormData(backtestingForm);
-                const jobId = crypto.randomUUID();
-                formData.append('job_id', jobId);
-                watchProgress(jobId);
-                jobIdText.textContent = jobId;
 
                 // Log FormData contents for debugging
                 // for (let [key, value] of formData.entries()) {
@@ -383,17 +358,14 @@
                         tradeLogLink.style.display = 'inline';
                         equityCurveLink.href = data.results.equity_curve_url; // Link to the image itself
                         equityCurveLink.style.display = 'inline';
-                        progressBar.hidden = true;
                     } else if (data.error) {
                         statusText.textContent = `Error: ${data.error}`;
                         equityCurvePlaceholder.innerHTML = `<p class="text-red-400">Error: ${data.error}</p><p>${data.details || ''}</p>`;
-                        progressBar.hidden = true;
                     }
                 } catch (error) {
                     console.error('Error submitting backtest:', error);
                     statusText.textContent = 'Failed to run backtest.';
                     equityCurvePlaceholder.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Check browser console and Flask server logs for details.</p>`;
-                    progressBar.hidden = true;
                 }
             });
         }
