@@ -28,7 +28,7 @@ The application reads configuration from environment variables using `python-dot
 - `STRIPE_PUBLISHABLE_KEY` – your Stripe publishable key
 - `STRIPE_PRICE_ID` – the price ID for the checkout session
 - `STRIPE_PRICING_TABLE_ID` – pricing table ID used for the Stripe pricing table widget
-- `OPENAI_API_KEY` – optional key used by the backtester logic
+- `OPENAI_API_KEY` – API key used by the backtester and live trading scripts
 - `HOSTED_PROMPT_ID` – optional ID for an OpenAI hosted prompt
 - `HOSTED_PROMPT_VERSION` – version number for the hosted prompt (default `1`)
 - `ENABLE_API_CALL_BUFFER` – set to `1` to wait after LLM calls (default disables delay)
@@ -69,6 +69,7 @@ market **BUY** or **SELL** order based on the response.
 Environment variables required for live trading:
 
 - `BINANCE_API_KEY` and `BINANCE_API_SECRET` – your Binance credentials
+- `OPENAI_API_KEY` – your OpenAI API key for strategy prompts
 - `LIVE_TRADING_PROMPT` – the prompt describing your strategy
 - `TRADE_AMOUNT_BTC` – amount of BTC to trade each cycle (default `0.001`)
 

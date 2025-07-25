@@ -339,12 +339,12 @@ def handle_run_backtest():
                         return jsonify({"error": "CSV file is invalid."}), 400
 
             elif data_source == "exchange":
-                # This part remains conceptual as per previous discussions
+                # Exchange data fetch not yet implemented
                 trading_pair = request.form.get("backtest_exchange_pair")
                 start_date = request.form.get("backtest_start_date")
                 end_date = request.form.get("backtest_end_date")
                 app.logger.info(
-                    f"Conceptual: Fetch data for {trading_pair} from {start_date} to {end_date}"
+                    f"Exchange fetch placeholder for {trading_pair} from {start_date} to {end_date}"
                 )
                 # For now, return not implemented
                 return (

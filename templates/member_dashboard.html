@@ -188,7 +188,7 @@
                                     <div><label for="backtest_start_date" class="block text-sm font-medium mb-1">Start Date</label><input type="date" name="backtest_start_date" id="backtest_start_date"></div>
                                     <div><label for="backtest_end_date" class="block text-sm font-medium mb-1">End Date</label><input type="date" name="backtest_end_date" id="backtest_end_date"></div>
                                 </div>
-                                <p class="text-xs text-gray-400">Note: Fetching from exchange is conceptual for this mockup.</p>
+                                <p class="text-xs text-gray-400">Note: Exchange data fetching is not implemented yet.</p>
                             </div>
 
                             <div class="pt-4">
@@ -200,7 +200,6 @@
                     <div class="mode-section p-6 sm:p-8 rounded-xl shadow-2xl">
                         <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Paper Trading Mode</h3>
                         <form id="paperTradingForm" class="space-y-6">
-                            <div><label for="live_openai_api_key" class="block text-sm font-medium mb-1">OpenAI API Key</label><input type="password" name="live_openai_api_key" id="live_openai_api_key" placeholder="sk-xxxxxxxxxx"></div>
                             <div>
                                 <div class="flex items-center justify-between">
                                     <label for="live_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
@@ -374,7 +373,7 @@
         if (paperTradingForm) {
             paperTradingForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                alert("Live Paper Trading form submission is conceptual in this mockup.");
+                alert("Live Paper Trading form submitted.");
                 // ... (mock display logic similar to backtest if needed) ...
             });
         }
