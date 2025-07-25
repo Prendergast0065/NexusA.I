@@ -3,47 +3,309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt Guide - NexusTrade AI Lab</title>
+    <title>NexusTrade AI Lab - Prompt Guide</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #E5E7EB; }
-        .content { background-color: #1F2937; border: 1px solid #374151; }
-        .cta-button { background-color: #3B82F6; transition: background-color 0.3s ease; }
-        .cta-button:hover { background-color: #2563EB; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #E5E7EB; /* Light text */
+        }
+        .content-section {
+            background-color: #1F2937;
+            border: 1px solid #374151;
+        }
+        h1, h2, h3 {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+        h1 { font-size: 2.25rem; /* 3xl */ }
+        h2 { font-size: 1.875rem; /* 2xl */ border-bottom: 1px solid #374151; padding-bottom: 0.75rem; margin-top: 2.5rem; }
+        h3 { font-size: 1.5rem; /* xl */ margin-top: 1.5rem; }
+        p {
+            color: #D1D5DB; /* Gray 300 */
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        ul {
+            list-style: disc;
+            list-style-position: inside;
+            margin-left: 1rem;
+            margin-bottom: 1rem;
+        }
+        ul li {
+            color: #D1D5DB;
+            margin-bottom: 0.5rem;
+        }
+        code {
+            background-color: #374151;
+            color: #E5E7EB;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        pre {
+            background-color: #1F2937;
+            border: 1px solid #4B5563;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        pre code {
+            display: block;
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 0.9rem;
+            white-space: pre-wrap; /* Ensures code wraps */
+            word-wrap: break-word; /* Ensures long words break */
+        }
+        strong { font-weight: 600; color: #FFFFFF; }
+        a { color: #3B82F6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .cta-button {
+            background-color: #3B82F6;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #2563EB;
+        }
+        .secondary-button {
+            background-color: transparent;
+            color: #9CA3AF;
+            transition: color 0.3s ease;
+        }
+        .secondary-button:hover {
+            color: #E5E7EB;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
-    <nav class="bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <nav class="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <a href="/" class="text-2xl font-bold text-white">NexusTrade <span class="text-blue-500">AI Lab</span></a>
+                    <span class="ml-4 text-sm text-gray-400 hidden sm:inline">- Prompt Guide</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/dashboard" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="/how-it-works" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">How It Works</a>
+                        <a href="/login" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="/signup" class="cta-button text-white px-3 py-2 rounded-md text-sm font-medium">Sign Up</a>
+                    </div>
+                </div>
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" id="mobile-menu-button" class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" id="icon-menu" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg class="hidden h-6 w-6" id="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
             </div>
         </div>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="/dashboard" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
+                <a href="/how-it-works" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">How It Works</a>
+                <a href="/login" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Login</a>
+                <a href="/signup" class="cta-button text-white block px-3 py-2 rounded-md text-base font-medium">Sign Up</a>
+            </div>
+        </div>
     </nav>
-    <main class="flex-grow pt-16">
-        <header class="bg-gray-800 py-12 text-center">
-            <div class="max-w-4xl mx-auto px-4">
-                <h1 class="text-4xl font-extrabold text-white">How to Write an Effective AI Prompt</h1>
-            </div>
-        </header>
-        <section class="py-12">
-            <div class="max-w-3xl mx-auto px-4 space-y-6 content p-6 sm:p-8 rounded-xl shadow-lg">
-                <p class="text-gray-300">Clear instructions help the AI produce better results. Keep these tips in mind when crafting your trading strategy prompts:</p>
-                <ul class="list-disc list-inside space-y-2 text-gray-400">
-                    <li>State your goal for the strategy in one or two sentences.</li>
-                    <li>Provide any important constraints, such as risk limits or preferred indicators.</li>
-                    <li>Mention how trades should be entered and exited.</li>
-                    <li>Be explicit about time frames or assets if they matter.</li>
-                </ul>
-                <p class="text-gray-300">Use short, direct sentences and specify only what is necessary for your backtest or paper session.</p>
-                <div class="text-center pt-4">
-                    <a href="/dashboard" class="cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Back to Dashboard</a>
-                </div>
-            </div>
-        </section>
+
+    <main class="flex-grow py-12 sm:py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 content-section p-6 sm:p-8 rounded-xl shadow-2xl">
+            <h1>Mastering AI Prompts for Trading Strategies in NexusTrade AI Lab</h1>
+
+            <p>Welcome, aspiring AI traders! In the NexusTrade AI Lab, your most powerful tool isn't complex code or arcane financial algorithms; it's your ability to communicate effectively with the AI. This communication happens through <strong>prompts</strong>. Think of a prompt as the instruction manual you give to a highly intelligent, yet utterly literal, assistant. The better your instructions, the better the assistant performs.</p>
+
+            <p>This guide will walk you through the art and science of crafting detailed, effective prompts for your AI trading strategies, whether you're backtesting against historical data or generating live signals. By understanding the components of a good prompt, you'll empower your AI to make more precise and profitable simulated trading decisions.</p>
+
+            <!-- Quick Start Guide Section -->
+            <h2 id="quick-start">Quick Start: Running Your First Backtest</h2>
+            <p>Ready to try out your first AI trading strategy? Follow these quick steps to run a basic backtest using the pre-saved data.</p>
+
+            <h3>Step 1: Navigate to the Dashboard</h3>
+            <p>First, ensure you are logged in and on the <a href="/dashboard" class="text-blue-400 hover:underline">Member Dashboard</a>.</p>
+
+            <h3>Step 2: Input Your AI Strategy Prompt</h3>
+            <p>In the "Backtesting Mode" section, you'll see a large text area labeled "Custom AI Strategy Prompt". For your first test, you can paste a simple prompt like this:</p>
+            <pre><code>"You are a simple trend-following bot. If the close price is above the SMA_30, BUY. If the close price is below the SMA_30, SELL. Otherwise, HOLD. Confidence should be 90% for clear signals, 50% for HOLD. Provide concise reasoning."</code></pre>
+            <p>This prompt tells the AI to follow a basic moving average crossover strategy.</p>
+
+            <h3>Step 3: Choose Your Historical Data</h3>
+            <p>Below the prompt, you'll find "Historical Data Source" options. To make it easy, we recommend using the pre-saved sample BTC data:</p>
+            <ul>
+                <li>Select the "Upload CSV" radio button (it should be selected by default).</li>
+                <li>Check the box labeled "Use sample BTC data". This will automatically use a pre-loaded dataset, so you don't need to upload a file.</li>
+            </ul>
+
+            <h3>Step 4: Set Days to Backtest</h3>
+            <p>For your first run, we recommend keeping the backtest duration short:</p>
+            <ul>
+                <li>In the "Days to Backtest from CSV" field, enter <code>1</code>.</li>
+                <li>**Important Note:** Backtesting longer periods (e.g., 7 days) involves significantly more API calls to the AI model and can lead to very high wait times or even timeouts. For faster results and initial testing, **1 day is highly recommended.**</li>
+            </ul>
+
+            <h3>Step 5: Run the Backtest</h3>
+            <p>With your prompt and data selected, simply click the "<span class="cta-button inline-block px-2 py-1 rounded-md text-white">Run Backtest</span>" button at the bottom of the "Backtesting Mode" form.</p>
+            <p>The "Session Results" area will appear below, showing the status, and eventually, performance metrics and an equity curve for your strategy.</p>
+            <p>Congratulations! You've run your first AI backtest. Now, you can dive deeper into the comprehensive guide below to learn how to refine your prompts for more sophisticated strategies.</p>
+
+            <!-- Original Guide Content Starts Here -->
+            <h2 id="full-guide">The Full Guide: Mastering AI Prompts</h2>
+
+            <p>In the context of NexusTrade AI Lab, an AI trading prompt is a natural language instruction that defines the rules, context, and desired output for our underlying large language model (LLM), which is typically GPT-4o. When you "run a backtest" or "start a signal generator," this prompt is fed to the AI along with real-time or historical market data. The AI then processes this information and generates a trading decision (BUY, SELL, or HOLD) along with a confidence score and a reasoning.</p>
+
+            <p>Your prompt essentially molds the AI's "personality" and "strategy." It dictates:</p>
+            <ul>
+                <li><strong>Its role:</strong> Is it a conservative investor or an aggressive day trader?</li>
+                <li><strong>Its knowledge base:</strong> What indicators should it prioritize?</li>
+                <li><strong>Its decision-making process:</strong> Under what specific conditions should it initiate a trade?</li>
+                <li><strong>Its risk tolerance:</strong> How should it manage your simulated capital?</li>
+                <li><strong>Its output format:</strong> How should it present its decision and rationale?</li>
+            </ul>
+
+            <h2>The Anatomy of an Effective Trading Prompt</h2>
+
+            <p>A robust trading prompt usually consists of several key components working in concert. Let's break them down:</p>
+
+            <h3>1. Define the AI's Persona and Goal</h3>
+            <p>Start by setting the stage. Clearly tell the AI what its role is and what it's trying to achieve.</p>
+            <ul>
+                <li><strong>Role/Persona:</strong> "Act as a professional cryptocurrency quantitative analyst." or "You are a conservative swing trader focused on long-term growth."</li>
+                <li><strong>Overall Goal:</strong> "Your primary objective is to maximize USDT profit in a simulated environment." or "Focus on capital preservation while seeking moderate gains."</li>
+            </ul>
+            <pre><code>"You are a highly experienced and cautious crypto trading bot specializing in Bitcoin (BTC) against USDT. Your main goal is to generate consistent, small profits while strictly managing risk and avoiding large drawdowns. Maximize your USDT balance by executing smart BUY and SELL orders."</code></pre>
+
+            <h3>2. Specify Input Data and How to Interpret It</h3>
+            <p>Tell the AI what kind of data it will receive and guide its interpretation. The platform will provide 1-minute OHLCV (Open, High, Low, Close, Volume) data, along with calculated indicators like SMA (Simple Moving Average), RSI (Relative Strength Index), and ATR (Average True Range).</p>
+            <ul>
+                <li><strong>Explicitly mention available data:</strong> "You will be provided with the latest 60 minutes of 1-minute OHLCV data for BTC/USDT, including SMA-30, SMA-60, RSI, and ATR."</li>
+                <li><strong>Guide interpretation:</strong> "Pay close attention to price action relative to SMAs. Look for divergence in RSI as a momentum signal. Use ATR to gauge volatility and potential stop-loss levels."</li>
+            </ul>
+            <pre><code>"Analyze the provided 1-minute candlestick data. The data includes 'open', 'high', 'low', 'close' prices, 'volume', 'sma_30', 'sma_60', 'rsi', and 'atr'. Focus primarily on the 'close' price, its relationship to the 'sma_30' and 'sma_60', and the 'rsi' value. Consider 'volume' as a confirmation factor for price movements."</code></pre>
+
+            <h3>3. Outline Trading Logic (Conditions for BUY, SELL, HOLD)</h3>
+            <p>This is the core of your strategy. Be as specific as possible about the conditions that must be met for each action. Use logical operators (AND, OR) where appropriate.</p>
+            <ul>
+                <li><strong>BUY Conditions:</strong>
+                    <ul>
+                        <li>"BUY when the 'close' price crosses above 'sma_30' AND 'rsi' is below 70."</li>
+                        <li>"Consider buying if 'close' is above 'sma_60' and 'volume' is increasing."</li>
+                    </ul>
+                </li>
+                <li><strong>SELL Conditions:</strong>
+                    <ul>
+                        <li>"SELL when the 'close' price crosses below 'sma_30' OR 'rsi' is above 70."</li>
+                        <li>"Sell if 'close' falls below 'sma_60' and you are currently holding BTC."</li>
+                    </ul>
+                </li>
+                <li><strong>HOLD Conditions:</strong>
+                    <ul>
+                        <li>"HOLD if no clear BUY or SELL signals are present."</li>
+                        <li>"HOLD if 'rsi' is between 30 and 70 and price is ranging."</li>
+                    </ul>
+                </li>
+            </ul>
+            <pre><code>"**BUY Signal:** Initiate a BUY order if the current 'close' price is above both 'sma_30' and 'sma_60', AND the 'rsi' is below 60 (indicating not overbought), AND there is significant increasing 'volume' over the last 3-5 candles. You must have sufficient USDT balance (equal to or greater than TRADE_AMOUNT * current_price) to execute a BUY."</code></pre>
+            <pre><code>"**SELL Signal:** Initiate a SELL order if the current 'close' price falls below 'sma_30' or if 'rsi' is above 70 (indicating overbought conditions), AND you currently hold BTC. You must have sufficient BTC balance (equal to or greater than TRADE_AMOUNT) to execute a SELL."</code></pre>
+            <pre><code>"**HOLD Signal:** If none of the above conditions for BUY or SELL are strongly met, or if the market is too volatile (e.g., 'atr' is very high without clear direction), issue a HOLD signal. Always default to HOLD if uncertain."</code></pre>
+
+            <h3>4. Incorporate Risk Management</h3>
+            <p>Crucial for real-world (and simulated) trading. Tell the AI how to protect capital.</p>
+            <ul>
+                <li><strong>Position Sizing:</strong> "Your trade size is fixed at <code>TRADE_AMOUNT</code> BTC. Do not deviate."</li>
+                <li><strong>Balance Management:</strong> "Only BUY if you have enough USDT. Only SELL if you have enough BTC."</li>
+                <li><strong>Drawdown Avoidance:</strong> "Prioritize avoiding large losses over chasing maximal gains."</li>
+                <li><strong>Confidence Thresholds:</strong> "Only execute a signal if your confidence score is above 80%." (Note: The platform generates confidence, but you can instruct the AI to <em>only provide</em> high-confidence signals.)</li>
+            </ul>
+            <pre><code>"Your simulated starting balance is `STARTING_BALANCE_USD`USDT, and your fixed trade amount is`TRADE_AMOUNT`BTC. Always ensure you have enough balance to execute a trade. Do not overtrade. If a BUY signal requires more USDT than you possess, adjust to HOLD. If a SELL signal requires more BTC than you possess, adjust to HOLD. Do not risk more than 2% of your total equity on any single trade (conceptually, given fixed TRADE_AMOUNT, this means being cautious)."</code></pre>
+
+            <h3>5. Define Output Format</h3>
+            <p>Tell the AI exactly how you want its response structured. This is vital for the platform to parse the AI's decision.</p>
+            <ul>
+                <li><strong>Required fields:</strong> "Your response must strictly contain three parts: <code>ACTION</code>, <code>CONFIDENCE</code>, and <code>REASONING</code>."</li>
+                <li><strong>Format for each:</strong>
+                    <ul>
+                        <li><code>ACTION</code>: Must be one of "BUY", "SELL", or "HOLD".</li>
+                        <li><code>CONFIDENCE</code>: A percentage score (e.g., "95%").</li>
+                        <li><code>REASONING</code>: A concise, 1-2 sentence explanation for the decision, referencing the data points and rules you specified.</li>
+                    </ul>
+                </li>
+            </ul>
+            <pre><code>"Provide your decision as a single word: 'BUY', 'SELL', or 'HOLD'. Immediately follow this with a confidence score (e.g., '85%'). Then, provide a concise reasoning (1-2 sentences) explaining your decision based on the market data and your strategy. Example: 'BUY 90% RSI crossed up from oversold, volume confirmed breakout.'"</code></pre>
+
+            <h2>Example: A Complete (Basic) Prompt</h2>
+            <pre><code>"You are a moderately aggressive Bitcoin day trading AI. Your goal is to profit from short-term price movements in BTC/USDT.
+
+You will receive the latest 60 minutes of 1-minute OHLCV data, including 'open', 'high', 'low', 'close', 'volume', 'sma_30', 'sma_60', 'rsi', and 'atr'. Focus on 'close' price, 'sma_30', and 'rsi'. Your current USDT balance is `USDT_BALANCE` and BTC balance is `BTC_BALANCE`. Your fixed trade amount is `TRADE_AMOUNT` BTC.
+
+**BUY Signal:** Issue a BUY if the 'close' price has crossed above 'sma_30' in the last 5 minutes AND 'rsi' is below 65. Ensure you have enough USDT (`TRADE_AMOUNT` * current price). Prioritize buying when volume is above average.
+
+**SELL Signal:** Issue a SELL if the 'close' price has fallen below 'sma_30' in the last 5 minutes OR 'rsi' is above 75. Ensure you have enough BTC (`TRADE_AMOUNT`). Prioritize selling when volume is above average.
+
+**HOLD Signal:** Issue a HOLD if conditions for BUY or SELL are not clearly met, or if 'rsi' is between 40 and 60 with low volatility (low 'atr').
+
+Your output must strictly follow this format:
+ACTION CONFIDENCE% REASONING
+Example: BUY 88% Close price is above SMA_30 and RSI is rising from oversold conditions, indicating bullish momentum."</code></pre>
+
+            <h2>Tips for Iteration and Refinement</h2>
+            <p>Prompt engineering is an iterative process. Here's how to refine your strategies:</p>
+            <ol>
+                <li><strong>Start Simple:</strong> Begin with a basic strategy and gradually add complexity. Don't try to implement everything at once.</li>
+                <li><strong>Be Explicit:</strong> Ambiguity is the enemy. If you mean "greater than or equal to," write that. If you mean "the last 5 candles," specify that.</li>
+                <li><strong>Use Numeric Values:</strong> Whenever possible, use concrete numbers (e.g., <code>RSI is below 30</code>, <code>volume is 1.5x average</code>) rather than vague terms (e.g., <code>RSI is low</code>, <code>volume is high</code>).</li>
+                <li><strong>Reference Data Directly:</strong> Use the exact names of the data fields provided (e.g., <code>sma_30</code>, <code>rsi</code>, <code>close</code>).</li>
+                <li><strong>Test, Analyze, Adjust:</strong> Run your backtests or signal generators. Review the AI's "REASONING" carefully. Does it align with your intent? Where did it make a suboptimal decision? Adjust your prompt based on these observations.</li>
+                <li><strong>Consider AI Limitations:</strong> While powerful, LLMs can sometimes "hallucinate" or misinterpret subtle nuances. Be prepared to clarify and re-prompt if the AI consistently misunderstands a rule.</li>
+                <li><strong>Temperature/Creativity:</strong> For trading, you generally want the AI to be deterministic and logical, not creative. The underlying model settings are optimized for this, but your prompt's clarity is paramount.</li>
+                <li><strong>Chain of Thought (Advanced):</strong> For very complex strategies, you might ask the AI to "think step-by-step" before giving its final answer. While the NexusTrade Lab focuses on direct output, in a more advanced setting, you could prompt: "First, analyze market structure. Second, check indicator alignment. Third, evaluate risk. Finally, provide decision." This can help the AI structure its internal reasoning.</li>
+            </ol>
+
+            <h2>Conclusion</h2>
+            <p>Crafting effective AI trading prompts is a skill that improves with practice. By approaching it systematically – defining the persona, detailing input interpretation, outlining clear logic, incorporating risk management, and specifying output – you can build powerful and intelligent trading agents within the NexusTrade AI Lab. Experiment, observe, and refine your prompts, and you'll unlock the full potential of AI-driven trading strategy development. Good luck!</p>
+        </div>
     </main>
+
+    <footer class="bg-gray-900 border-t border-gray-700 mt-auto">
+         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2025 NexusTrade AI Lab. All rights reserved.</p>
+            <p class="text-xs text-gray-500 mt-1">For demonstration and educational purposes only. Trading involves risk.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const iconMenu = document.getElementById('icon-menu');
+        const iconClose = document.getElementById('icon-close');
+
+        if (mobileMenuButton && mobileMenu && iconMenu && iconClose) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                iconMenu.classList.toggle('hidden');
+                iconClose.classList.toggle('hidden');
+            });
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if(!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        iconMenu.classList.remove('hidden');
+                        iconClose.classList.add('hidden');
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>
