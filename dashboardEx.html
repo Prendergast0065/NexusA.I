@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTrade AI Lab - Member Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #E5E7EB; /* Light text */
+        }
+        .lab-section, .mode-section {
+            background-color: #1F2937;
+            border: 1px solid #374151;
+        }
+        .cta-button {
+            background-color: #3B82F6;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #2563EB;
+        }
+        .secondary-button {
+            background-color: transparent;
+            border: 1px solid #3B82F6;
+            color: #3B82F6;
+        }
+        .secondary-button:hover {
+            background-color: #3B82F6;
+            color: #FFFFFF;
+        }
+        label { color: #9CA3AF; }
+        input[type="text"], input[type="password"], input[type="number"], input[type="date"], textarea, select {
+            background-color: #374151;
+            border: 1px solid #4B5563;
+            color: #E5E7EB;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+        }
+        input[type="file"] { color: #9CA3AF; }
+        input[type="file"]::file-selector-button {
+            background-color: #3B82F6; color: white; border: none;
+            padding: 0.5rem 0.75rem; border-radius: 0.375rem;
+            cursor: pointer; margin-right: 0.75rem;
+        }
+        input[type="file"]::file-selector-button:hover { background-color: #2563EB; }
+        .disclaimer {
+            background-color: #374151; color: #D1D5DB; padding: 0.75rem 1rem;
+            border-radius: 0.5rem; font-size: 0.875rem;
+            border-left: 4px solid #F59E0B;
+        }
+        .radio-label {
+            display: inline-flex; align-items: center; cursor: pointer;
+            margin-right: 1rem; color: #D1D5DB;
+        }
+        .radio-label input[type="radio"] {
+            appearance: none; -webkit-appearance: none; width: 1.25em; height: 1.25em;
+            border: 2px solid #4B5563; border-radius: 50%; margin-right: 0.5em;
+            outline: none; transition: border-color 0.2s;
+        }
+        .radio-label input[type="radio"]:checked {
+            border-color: #3B82F6; background-color: #3B82F6; position: relative;
+        }
+        .radio-label input[type="radio"]:checked::before {
+            content: ''; display: block; width: 0.65em; height: 0.65em;
+            background-color: white; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-gray-900 border-b border-gray-700 sticky top-0 z-50">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-white">NexusTrade <span class="text-blue-500">AI Lab</span></a>
+                    <span class="ml-4 text-sm text-gray-400 hidden sm:inline">- Member Dashboard</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#lab" class="bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium">Trading Lab</a>
+                        <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">My Profile (Conceptual)</a>
+                        <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Billing (Conceptual)</a>
+                        <a href="/logout" id="logoutLink" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    </div>
+                </div>
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" id="dashboard-mobile-menu-button" class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" id="icon-menu" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg class="hidden h-6 w-6" id="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="md:hidden hidden" id="dashboard-mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#lab" class="bg-gray-700 text-white block px-3 py-2 rounded-md text-base font-medium">Trading Lab</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">My Profile</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Billing</a>
+                <a href="/logout" id="logoutLinkMobile" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <section id="lab" class="py-12 sm:py-16">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h1 class="text-3xl lg:text-4xl font-extrabold text-white">Welcome to the AI Trading Lab</h1>
+                    <p class="mt-3 text-lg text-gray-400">Configure your AI, run backtests, and simulate paper trading sessions.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div class="mode-section p-6 sm:p-8 rounded-xl shadow-2xl">
+                        <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Backtesting Mode</h3>
+                        <form id="backtestingForm" class="space-y-6">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <label for="backtest_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
+                                    <a href="/prompt-guide" class="secondary-button text-xs px-2 py-1 rounded-md">How to?</a>
+                                </div>
+                                <textarea name="backtest_strategy_prompt" id="backtest_strategy_prompt" rows="8" placeholder="Define your AI's backtesting logic..." required></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="starting_balance_usd" class="block text-sm font-medium mb-1">Starting Balance (USD)</label>
+                                    <input type="number" step="0.01" name="starting_balance_usd" id="starting_balance_usd" value="10000">
+                                </div>
+                                <div>
+                                    <label for="trade_amount_btc" class="block text-sm font-medium mb-1">Trade Amount (BTC)</label>
+                                    <input type="number" step="0.001" name="trade_amount_btc" id="trade_amount_btc" value="0.01">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium mb-1">Historical Data Source:</label>
+                                <div>
+                                    <label class="radio-label">
+                                        <input type="radio" name="dataSource" value="csv" checked> Upload CSV
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="dataSource" value="exchange"> Fetch from Exchange (Conceptual)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="csvDataSourceFields" class="space-y-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="backtest_csv_data" class="block text-sm font-medium mb-1">Upload Data (1-min OHLCV CSV)</label>
+                                        <input type="file" name="backtest_csv_data" id="backtest_csv_data" accept=".csv">
+                                    </div>
+                                    <div>
+                                        <label for="backtest_days_csv" class="block text-sm font-medium mb-1">Days to Backtest from CSV</label>
+                                        <input type="number" name="backtest_days_csv" id="backtest_days_csv" value="7" min="1">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="backtest_randomize_period_csv" class="block text-sm font-medium mb-1">Randomize Period in CSV?</label>
+                                    <select name="backtest_randomize_period_csv" id="backtest_randomize_period_csv">
+                                        <option value="yes" selected>Yes</option> <option value="no">No (use latest)</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" name="use_builtin_btc" id="use_builtin_btc" class="mr-2">
+                                    <label for="use_builtin_btc" class="text-sm font-medium">Use sample BTC data</label>
+                                </div>
+                            </div>
+
+                            <div id="exchangeDataSourceFields" class="space-y-6 hidden">
+                                <div>
+                                    <label for="backtest_exchange_pair" class="block text-sm font-medium mb-1">Trading Pair</label>
+                                    <input type="text" name="backtest_exchange_pair" id="backtest_exchange_pair" value="BTC/USDT">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div><label for="backtest_start_date" class="block text-sm font-medium mb-1">Start Date</label><input type="date" name="backtest_start_date" id="backtest_start_date"></div>
+                                    <div><label for="backtest_end_date" class="block text-sm font-medium mb-1">End Date</label><input type="date" name="backtest_end_date" id="backtest_end_date"></div>
+                                </div>
+                                <p class="text-xs text-gray-400">Note: Exchange data fetching is not implemented yet.</p>
+                            </div>
+
+                            <div class="pt-4">
+                                <button type="submit" id="runBacktestButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Run Backtest</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="mode-section p-6 sm:p-8 rounded-xl shadow-2xl">
+                        <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Paper Trading Mode</h3>
+                        <form id="paperTradingForm" class="space-y-6">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <label for="live_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
+                                    <a href="/prompt-guide" class="secondary-button text-xs px-2 py-1 rounded-md">How to?</a>
+                                </div>
+                                <textarea name="live_strategy_prompt" id="live_strategy_prompt" rows="8" placeholder="Define your AI's live paper trading logic..."></textarea>
+                            </div>
+                            <div class="border-t border-gray-700 pt-6"><h4 class="text-md font-semibold text-gray-300 mb-2">Paper Trading Exchange Connection</h4><div class="space-y-4"><div><label for="paper_exchange" class="block text-sm font-medium mb-1">Select Paper Exchange</label><select name="paper_exchange" id="paper_exchange"><option value="binance_paper">Binance (Paper Account)</option><option value="bybit_paper">Bybit (Testnet/Paper)</option></select></div><div><label for="paper_api_key_live" class="block text-sm font-medium mb-1">Paper Trading API Key</label><input type="text" name="paper_api_key_live" id="paper_api_key_live" placeholder="Enter paper account API key"></div><div><label for="paper_api_secret_live" class="block text-sm font-medium mb-1">Paper Trading API Secret</label><input type="password" name="paper_api_secret_live" id="paper_api_secret_live" placeholder="Enter paper account API secret"></div><p class="text-xs text-yellow-400 mt-1 disclaimer"><strong class="font-bold">Important:</strong> Use API keys for paper trading accounts only.</p></div></div>
+                            <div class="pt-4"><button type="submit" id="startPaperTradingButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Start Live Paper Session</button></div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="resultsArea" class="mt-12 lab-section p-6 sm:p-8 rounded-xl shadow-2xl hidden">
+                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Backtest Session Results</h3>
+                    <div id="equityCurvePlaceholder" class="bg-gray-700 min-h-[200px] rounded-md flex items-center justify-center text-gray-400 mb-6">Equity Curve / Performance Chart Will Appear Here</div>
+                    <div id="statsPlaceholder" class="text-gray-300 space-y-2"><p><strong>Status:</strong> <span id="statusText">Pending...</span></p><p><strong>Mode:</strong> <span id="modeText">-</span></p><p><strong>Job ID:</strong> <span id="jobIdText">-</span></p><p><strong>Final Equity:</strong> <span id="finalEquityText">-</span></p><p><strong>Net P/L:</strong> <span id="netPLText">-</span></p><p><strong>Total Trades:</strong> <span id="totalTradesText">-</span></p><p><a href="#" id="tradeLogLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">Download Full Trade Log (CSV)</a></p><p><a href="#" id="equityCurveLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">View Equity Curve Image</a></p></div>
+                </div>
+
+                <div id="liveTradingResultsArea" class="mt-12 lab-section p-6 sm:p-8 rounded-xl shadow-2xl hidden">
+                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Live Paper Trading Session Status</h3>
+                    <div class="bg-gray-700 min-h-[100px] rounded-md flex items-center justify-center text-gray-400 mb-6" id="liveStatusDisplay">
+                        Waiting to start...
+                    </div>
+                    <div class="text-gray-300 space-y-2">
+                        <p><strong>Session Status:</strong> <span id="liveSessionStatus">Inactive</span></p>
+                        <p><strong>Mode:</strong> <span id="liveModeText">Live Paper Trading</span></p>
+                        <p><strong>Session ID:</strong> <span id="liveSessionId">N/A</span></p>
+                        <p><strong>Current P/L:</strong> <span id="liveCurrentPL">N/A</span></p>
+                        <p><strong>Recent Trades:</strong> <span id="liveRecentTrades">N/A</span></p>
+                        <p class="text-xs text-gray-500 mt-4">Note: Real-time updates for live trading require backend integration (e.g., WebSockets or continuous polling) to fetch ongoing data.</p>
+                    </div>
+                    <div class="pt-4 text-center">
+                        <button type="button" id="stopLiveTradingButton" class="secondary-button text-red-400 border-red-400 hover:bg-red-500 hover:text-white px-6 py-3 rounded-lg font-semibold shadow-lg hidden">Stop Live Session</button>
+                    </div>
+                </div>
+                <p class="text-xs text-center text-gray-500 mt-8">Results will appear above after processing.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 border-t border-gray-700 mt-auto">
+         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2025 NexusTrade AI Lab. All rights reserved.</p>
+            <p class="text-xs text-gray-500 mt-1">For demonstration and educational purposes only. Trading involves risk.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const dashboardMobileMenuButton = document.getElementById('dashboard-mobile-menu-button');
+        const dashboardMobileMenu = document.getElementById('dashboard-mobile-menu');
+        const iconMenu = document.getElementById('icon-menu');
+        const iconClose = document.getElementById('icon-close');
+
+        if (dashboardMobileMenuButton && dashboardMobileMenu && iconMenu && iconClose) {
+            dashboardMobileMenuButton.addEventListener('click', () => {
+                dashboardMobileMenu.classList.toggle('hidden');
+                iconMenu.classList.toggle('hidden');
+                iconClose.classList.toggle('hidden');
+            });
+            dashboardMobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if(!dashboardMobileMenu.classList.contains('hidden')) {
+                        dashboardMobileMenu.classList.add('hidden');
+                        iconMenu.classList.remove('hidden');
+                        iconClose.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Data source toggle for Backtesting form
+        const dataSourceRadios = document.querySelectorAll('input[name="dataSource"]');
+        const csvFields = document.getElementById('csvDataSourceFields');
+        const exchangeFields = document.getElementById('exchangeDataSourceFields');
+
+        dataSourceRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'csv') {
+                    csvFields.classList.remove('hidden');
+                    exchangeFields.classList.add('hidden');
+                } else if (this.value === 'exchange') {
+                    csvFields.classList.add('hidden');
+                    exchangeFields.classList.remove('hidden');
+                }
+            });
+        });
+
+        // JS for Backtesting Form Submission
+        const backtestingForm = document.getElementById('backtestingForm');
+        const resultsArea = document.getElementById('resultsArea'); // Backtest results area
+        const statusText = document.getElementById('statusText');
+        const modeText = document.getElementById('modeText');
+        const jobIdText = document.getElementById('jobIdText');
+        const equityCurvePlaceholder = document.getElementById('equityCurvePlaceholder');
+        const finalEquityText = document.getElementById('finalEquityText');
+        const netPLText = document.getElementById('netPLText');
+        const totalTradesText = document.getElementById('totalTradesText');
+        const tradeLogLink = document.getElementById('tradeLogLink');
+        const equityCurveLink = document.getElementById('equityCurveLink');
+        const csvFileInput = document.getElementById('backtest_csv_data');
+        const builtinCheckbox = document.getElementById('use_builtin_btc');
+
+        if (builtinCheckbox) {
+            builtinCheckbox.addEventListener('change', () => {
+                csvFileInput.disabled = builtinCheckbox.checked;
+                // If using built-in data, clear any selected file
+                if (builtinCheckbox.checked) {
+                    csvFileInput.value = '';
+                }
+            });
+        }
+
+
+        if (backtestingForm) {
+            backtestingForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default HTML form submission
+                console.log("Backtesting form submitted via JS."); // For debugging
+
+                // Hide live trading results if visible
+                liveTradingResultsArea.classList.add('hidden');
+
+                statusText.textContent = 'Submitting backtest job...';
+                modeText.textContent = 'Backtest';
+                jobIdText.textContent = '-';
+                equityCurvePlaceholder.innerHTML = '<p>Processing your backtest...</p><div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500 mx-auto my-4"></div>';
+                finalEquityText.textContent = '-'; netPLText.textContent = '-'; totalTradesText.textContent = '-';
+                tradeLogLink.style.display = 'none'; equityCurveLink.style.display = 'none';
+                resultsArea.classList.remove('hidden');
+
+                const formData = new FormData(backtestingForm);
+
+                if (formData.get('dataSource') === 'csv' && csvFileInput.files.length === 0 && !(builtinCheckbox && builtinCheckbox.checked)) {
+                    statusText.textContent = 'Error: Please select a CSV file or use sample BTC data for backtesting.';
+                    equityCurvePlaceholder.innerHTML = '<p class="text-red-400">Error: No CSV file selected.</p>';
+                    return; // Stop if CSV is selected but no file
+                }
+
+
+                try {
+                    const response = await fetch('/run-backtest', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text(); // Get raw error text
+                        let errorData = { detail: `Server error: ${response.status}. ${errorText}` };
+                        try {
+                            errorData = JSON.parse(errorText); // Try to parse as JSON
+                        } catch (e) { /* Ignore if not JSON */ }
+                        console.error("Server error response:", errorData);
+                        throw new Error(`HTTP error ${response.status}: ${errorData.error || errorData.detail || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Received data from backend:", data); // For debugging
+
+                    statusText.textContent = data.status || 'Processing Complete';
+                    jobIdText.textContent = data.job_id || 'N/A';
+
+                    if (data.status === 'completed' && data.results) {
+                        equityCurvePlaceholder.innerHTML = `<img src="${data.results.equity_curve_url}?t=${new Date().getTime()}" alt="Equity Curve for Job ${data.job_id}" class="mx-auto rounded-md max-h-full"/>`;
+                        finalEquityText.textContent = data.results.final_equity ? `$${Number(data.results.final_equity).toFixed(2)}` : 'N/A';
+                        let startBalance = parseFloat(formData.get('starting_balance_usd')) || 10000; // Get start balance from form data
+                        let netPL = data.results.net_pl ? Number(data.results.net_pl) : 0;
+                        let netPLPercent = (startBalance > 0) ? (netPL / startBalance) * 100 : 0;
+                        netPLText.textContent = `${netPL.toFixed(2)} (${netPLPercent.toFixed(2)}%)`;
+                        totalTradesText.textContent = data.results.total_trades !== undefined ? data.results.total_trades : 'N/A';
+
+                        tradeLogLink.href = data.results.trade_log_url;
+                        tradeLogLink.style.display = 'inline';
+                        equityCurveLink.href = data.results.equity_curve_url; // Link to the image itself
+                        equityCurveLink.style.display = 'inline';
+                    } else if (data.error) {
+                        statusText.textContent = `Error: ${data.error}`;
+                        equityCurvePlaceholder.innerHTML = `<p class="text-red-400">Error: ${data.error}</p><p>${data.details || ''}</p>`;
+                    }
+                } catch (error) {
+                    console.error('Error submitting backtest:', error);
+                    statusText.textContent = 'Failed to run backtest.';
+                    equityCurvePlaceholder.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Check browser console and Flask server logs for details.</p>`;
+                }
+            });
+        }
+
+        // JS for Live Paper Trading Form Submission
+        const paperTradingForm = document.getElementById('paperTradingForm');
+        const liveTradingResultsArea = document.getElementById('liveTradingResultsArea'); // New live trading results area
+        const liveSessionStatus = document.getElementById('liveSessionStatus');
+        const liveSessionId = document.getElementById('liveSessionId');
+        const liveCurrentPL = document.getElementById('liveCurrentPL');
+        const liveRecentTrades = document.getElementById('liveRecentTrades');
+        const liveStatusDisplay = document.getElementById('liveStatusDisplay');
+        const stopLiveTradingButton = document.getElementById('stopLiveTradingButton');
+
+
+        if (paperTradingForm) {
+            paperTradingForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log("Live Paper Trading form submitted via JS.");
+
+                // Hide backtesting results if visible
+                resultsArea.classList.add('hidden');
+
+                // Display the live trading results area
+                liveTradingResultsArea.classList.remove('hidden');
+
+                liveSessionStatus.textContent = 'Starting...';
+                liveSessionId.textContent = 'Generating...';
+                liveCurrentPL.textContent = 'N/A';
+                liveRecentTrades.textContent = 'N/A';
+                liveStatusDisplay.innerHTML = '<p>Initiating live paper trading session...</p><div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-green-500 mx-auto my-4"></div>';
+                stopLiveTradingButton.classList.add('hidden'); // Hide stop button initially
+
+                const formData = new FormData(paperTradingForm);
+
+                // In a real application, you would send this to a backend endpoint
+                // that starts the live trading process and returns a session ID.
+                // For this example, we'll simulate a response.
+                try {
+                    // This is a conceptual fetch call. You would need to create a Flask endpoint
+                    // (e.g., /start-live-paper-trading) in your app.py to handle this.
+                    const response = await fetch('/start-live-paper-trading', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        let errorData = { detail: `Server error: ${response.status}. ${errorText}` };
+                        try {
+                            errorData = JSON.parse(errorText);
+                        } catch (e) { /* Ignore if not JSON */ }
+                        console.error("Server error response:", errorData);
+                        throw new Error(`HTTP error ${response.status}: ${errorData.error || errorData.detail || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Received data from live trading backend:", data);
+
+                    if (data.status === 'started' || data.status === 'success') {
+                        liveSessionStatus.textContent = 'Running';
+                        liveSessionId.textContent = data.session_id || 'LIVE-' + Date.now(); // Use actual ID or generate
+                        liveStatusDisplay.innerHTML = `<p class="text-green-400">Live Paper Trading Session Started! Session ID: ${liveSessionId.textContent}</p><p>Monitoring for updates...</p>`;
+                        stopLiveTradingButton.classList.remove('hidden');
+
+                        // Conceptual: In a real app, you'd set up a polling mechanism or WebSocket
+                        // to get continuous updates for liveCurrentPL, liveRecentTrades, etc.
+                        // For this example, we'll just set some mock data after a delay.
+                        setTimeout(() => {
+                            liveCurrentPL.textContent = '$+5.23'; // Mock data
+                            liveRecentTrades.textContent = '2 Buys, 1 Sell'; // Mock data
+                            liveStatusDisplay.innerHTML += '<p>Initial metrics loaded. Waiting for next update...</p>';
+                        }, 2000);
+
+                    } else if (data.error) {
+                        liveSessionStatus.textContent = 'Failed';
+                        liveStatusDisplay.innerHTML = `<p class="text-red-400">Error: ${data.error}</p><p>${data.details || ''}</p>`;
+                        stopLiveTradingButton.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error starting live paper trading:', error);
+                    liveSessionStatus.textContent = 'Failed to start';
+                    liveStatusDisplay.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Please check console.</p>`;
+                    stopLiveTradingButton.classList.add('hidden');
+                }
+            });
+        }
+
+        if (stopLiveTradingButton) {
+            stopLiveTradingButton.addEventListener('click', async () => {
+                liveSessionStatus.textContent = 'Stopping...';
+                liveStatusDisplay.innerHTML = '<p>Stopping live paper trading session...</p>';
+                stopLiveTradingButton.disabled = true;
+
+                try {
+                    // Conceptual: Send a request to your Flask backend to stop the session
+                    const response = await fetch('/stop-live-paper-trading', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId: liveSessionId.textContent })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        liveSessionStatus.textContent = data.status || 'Stopped';
+                        liveStatusDisplay.innerHTML = `<p class="text-blue-400">Live Paper Trading Session ${liveSessionId.textContent} stopped.</p>`;
+                    } else {
+                        throw new Error('Failed to stop session.');
+                    }
+                } catch (error) {
+                    console.error('Error stopping live paper trading:', error);
+                    liveStatusDisplay.innerHTML = `<p class="text-red-400">Error stopping session: ${error.message}</p>`;
+                } finally {
+                    stopLiveTradingButton.disabled = false;
+                    stopLiveTradingButton.classList.add('hidden'); // Hide after stopping
+                }
+            });
+        }
+
+    </script>
+
+</body>
+</html>
