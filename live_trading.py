@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import logging
 from datetime import datetime, timedelta
 import pandas as pd
@@ -28,6 +29,21 @@ INTERVAL = os.getenv("BINANCE_INTERVAL", "1m")
 LOOKBACK_MINUTES = int(os.getenv("LOOKBACK_MINUTES", "60"))
 TRADE_AMOUNT = float(os.getenv("TRADE_AMOUNT_BTC", "0.001"))
 USER_PROMPT = os.getenv("LIVE_TRADING_PROMPT", "")
+
+STATUS_FILE = os.getenv("LIVE_STATUS_FILE", "live_status.json")
+
+
+def write_status(status: dict):
+    """Write status information to JSON file."""
+    try:
+        with open(STATUS_FILE, "w") as f:
+            json.dump(status, f)
+    except Exception as e:
+        logger.error(f"Failed to write status: {e}")
+
+
+def init_status():
+    write_status({"status": "starting", "timestamp": datetime.utcnow().isoformat()})
 
 
 class BinanceTrader:
@@ -110,9 +126,11 @@ def run_live_trading():
         return
 
     trader = BinanceTrader(api_key, api_secret)
+    init_status()
 
-    while True:
-        try:
+    try:
+        while True:
+            try:
             df = trader.get_recent_data()
             btc_balance, usdt_balance = trader.get_balances()
             entry_price = df["close"].iloc[-1]
@@ -134,12 +152,35 @@ def run_live_trading():
                 trader.market_buy(TRADE_AMOUNT)
             elif action == "SELL" and btc_balance >= TRADE_AMOUNT:
                 trader.market_sell(TRADE_AMOUNT)
-        except Exception as e:
-            logger.error(f"Live trading loop error: {e}")
 
-        logger.info("Sleeping for 30 minutes...")
-        time.sleep(30 * 60)
+            write_status(
+                {
+                    "status": "running",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "action": action,
+                    "confidence": confidence,
+                    "reasoning": reasoning,
+                    "btc_balance": btc_balance,
+                    "usdt_balance": usdt_balance,
+                }
+            )
+            except Exception as e:
+                logger.error(f"Live trading loop error: {e}")
 
+                write_status({
+                    "status": "error",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "error": str(e),
+                })
+
+            logger.info("Sleeping for 30 minutes...")
+            time.sleep(30 * 60)
+    except KeyboardInterrupt:
+        logger.info("Live trading interrupted by user")
+
+    # On exit (unlikely due to infinite loop)
+    write_status({"status": "stopped", "timestamp": datetime.utcnow().isoformat()})
+    
 
 if __name__ == "__main__":
     run_live_trading()

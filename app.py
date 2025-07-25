@@ -12,6 +12,8 @@ from flask import (
 import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
+import subprocess
+import json
 import stripe  # Stripe payment processing
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -91,6 +93,9 @@ RESULTS_FOLDER = os.path.join(
 )  # Ensure 'static' is at the root of your Flask app
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
+
+LIVE_STATUS_FILE = os.environ.get("LIVE_STATUS_FILE", "live_status.json")
+LIVE_PROCESS = None
 
 # Default sample BTC data used when user opts in
 SAMPLE_BTC_DATA_PATH = os.path.join(app.root_path, "btc_1min_data.csv")
@@ -420,6 +425,39 @@ def serve_job_result_file(job_id, filename):
     )  # app.root_path is the app's root
     app.logger.info(f"Attempting to serve file: {filename} from directory: {directory}")
     return send_from_directory(directory, filename)
+
+
+# --- Live Trading Endpoints ---
+@app.route("/start-live-trading", methods=["POST"])
+@login_required
+def start_live_trading():
+    global LIVE_PROCESS
+    if not current_user.is_paid:
+        return jsonify({"error": "Payment required"}), 402
+
+    if LIVE_PROCESS and LIVE_PROCESS.poll() is None:
+        return jsonify({"status": "running"})
+
+    try:
+        LIVE_PROCESS = subprocess.Popen(["python", "live_trading.py"])
+        return jsonify({"status": "started"})
+    except Exception as e:
+        app.logger.error(f"Failed to start live trading: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/live-status")
+@login_required
+def live_status():
+    if not os.path.exists(LIVE_STATUS_FILE):
+        return jsonify({"status": "not running"})
+    try:
+        with open(LIVE_STATUS_FILE) as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        app.logger.error(f"Failed to read live status: {e}")
+        return jsonify({"error": "Could not read status"}), 500
 
 
 if __name__ == "__main__":
