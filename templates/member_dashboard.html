@@ -120,6 +120,47 @@
                     <p class="mt-3 text-lg text-gray-400">Configure your AI, run backtests, and simulate paper trading sessions.</p>
                 </div>
 
+                <div id="liveSignalDashboard" class="lab-section p-6 sm:p-8 rounded-xl shadow-2xl mb-12 hidden">
+                    <h2 class="text-3xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Signal Dashboard (BTC/USDT)</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center text-center">
+                        <div class="space-y-4">
+                            <p class="text-lg text-gray-400">Current BTC Price:</p>
+                            <p id="currentBtcPrice" class="price-text">$ --.--</p>
+                        </div>
+                        <div class="space-y-4">
+                            <p class="text-lg text-gray-400">AI Signal:</p>
+                            <p id="aiSignal" class="signal-text text-gray-500">HOLD</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-lg">
+                        <div class="p-4 bg-gray-700 rounded-md">
+                            <p class="text-gray-400">USD Balance:</p>
+                            <p id="walletUsdBalance" class="text-white font-semibold">$ 0.00</p>
+                        </div>
+                        <div class="p-4 bg-gray-700 rounded-md">
+                            <p class="text-gray-400">BTC Balance:</p>
+                            <p id="walletBtcBalance" class="text-white font-semibold">0.0000 BTC</p>
+                        </div>
+                        <div class="p-4 bg-gray-700 rounded-md">
+                            <p class="text-gray-400">Estimated P/L:</p>
+                            <p id="estimatedPL" class="text-white font-semibold">$ 0.00 (0.00%)</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <h4 class="text-xl font-semibold text-white mb-4 text-center">Recent Activity</h4>
+                        <div id="recentActivityLog" class="bg-gray-700 p-4 rounded-md h-48 overflow-y-auto text-sm text-gray-300">
+                            <p>No recent activities yet.</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 text-center">
+                        <button type="button" id="stopSignalGeneratorButton" class="secondary-button text-red-400 border-red-400 hover:bg-red-500 hover:text-white px-6 py-3 rounded-lg font-semibold shadow-lg hidden">Stop Signal Generator</button>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <!-- Backtesting Tool Section -->
                     <div class="mode-section p-6 sm:p-8 rounded-xl shadow-2xl">
@@ -198,7 +239,7 @@
                     </div>
 
                     <div class="mode-section p-6 sm:p-8 rounded-xl shadow-2xl">
-                        <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Paper Trading Mode</h3>
+                        <h3 class="text-2xl font-bold text-white mb-6 text-center border-b border-gray-700 pb-4">Live Paper Trading Mode (Signal Generation)</h3>
                         <form id="paperTradingForm" class="space-y-6">
                             <div>
                                 <div class="flex items-center justify-between">
@@ -207,8 +248,18 @@
                                 </div>
                                 <textarea name="live_strategy_prompt" id="live_strategy_prompt" rows="8" placeholder="Define your AI's live paper trading logic..."></textarea>
                             </div>
-                            <div class="border-t border-gray-700 pt-6"><h4 class="text-md font-semibold text-gray-300 mb-2">Paper Trading Exchange Connection</h4><div class="space-y-4"><div><label for="paper_exchange" class="block text-sm font-medium mb-1">Select Paper Exchange</label><select name="paper_exchange" id="paper_exchange"><option value="binance_paper">Binance (Paper Account)</option><option value="bybit_paper">Bybit (Testnet/Paper)</option></select></div><div><label for="paper_api_key_live" class="block text-sm font-medium mb-1">Paper Trading API Key</label><input type="text" name="paper_api_key_live" id="paper_api_key_live" placeholder="Enter paper account API key"></div><div><label for="paper_api_secret_live" class="block text-sm font-medium mb-1">Paper Trading API Secret</label><input type="password" name="paper_api_secret_live" id="paper_api_secret_live" placeholder="Enter paper account API secret"></div><p class="text-xs text-yellow-400 mt-1 disclaimer"><strong class="font-bold">Important:</strong> Use API keys for paper trading accounts only.</p></div></div>
-                            <div class="pt-4"><button type="submit" id="startPaperTradingButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Start Live Paper Session</button></div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="initial_usd_balance_live" class="block text-sm font-medium mb-1">Initial USDT Balance</label>
+                                    <input type="number" step="0.01" name="initial_usd_balance_live" id="initial_usd_balance_live" value="10000">
+                                </div>
+                                <div>
+                                    <label for="trade_amount_live" class="block text-sm font-medium mb-1">Trade Amount (BTC per signal)</label>
+                                    <input type="number" step="0.001" name="trade_amount_live" id="trade_amount_live" value="0.01">
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-700 pt-6"><h4 class="text-md font-semibold text-gray-300 mb-2">Market Data Source: CoinGecko (Conceptual)</h4><div class="space-y-4"><div><label for="data_source_live" class="block text-sm font-medium mb-1">Select Data Source</label><select name="data_source_live" id="data_source_live"><option value="coingecko">CoinGecko (Free Tier)</option><option value="other_conceptual">Other (Conceptual)</option></select></div><div><label for="api_key_live" class="block text-sm font-medium mb-1">API Key (if needed, e.g., for CoinGecko paid tiers)</label><input type="text" name="api_key_live" id="api_key_live" placeholder="Enter API key"></div><p class="text-xs text-yellow-400 mt-1 disclaimer"><strong class="font-bold">Important:</strong> Free CoinGecko API typically does not require a key for basic public endpoints. Other services might.</p></div></div>
+                            <div class="pt-4"><button type="submit" id="startPaperTradingButton" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-lg">Start AI Signal Generator</button></div>
                         </form>
                     </div>
                 </div>
@@ -219,23 +270,6 @@
                     <div id="statsPlaceholder" class="text-gray-300 space-y-2"><p><strong>Status:</strong> <span id="statusText">Pending...</span></p><p><strong>Mode:</strong> <span id="modeText">-</span></p><p><strong>Job ID:</strong> <span id="jobIdText">-</span></p><p><strong>Final Equity:</strong> <span id="finalEquityText">-</span></p><p><strong>Net P/L:</strong> <span id="netPLText">-</span></p><p><strong>Total Trades:</strong> <span id="totalTradesText">-</span></p><p><a href="#" id="tradeLogLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">Download Full Trade Log (CSV)</a></p><p><a href="#" id="equityCurveLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">View Equity Curve Image</a></p></div>
                 </div>
 
-                <div id="liveTradingResultsArea" class="mt-12 lab-section p-6 sm:p-8 rounded-xl shadow-2xl hidden">
-                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Live Paper Trading Session Status</h3>
-                    <div class="bg-gray-700 min-h-[100px] rounded-md flex items-center justify-center text-gray-400 mb-6" id="liveStatusDisplay">
-                        Waiting to start...
-                    </div>
-                    <div class="text-gray-300 space-y-2">
-                        <p><strong>Session Status:</strong> <span id="liveSessionStatus">Inactive</span></p>
-                        <p><strong>Mode:</strong> <span id="liveModeText">Live Paper Trading</span></p>
-                        <p><strong>Session ID:</strong> <span id="liveSessionId">N/A</span></p>
-                        <p><strong>Current P/L:</strong> <span id="liveCurrentPL">N/A</span></p>
-                        <p><strong>Recent Trades:</strong> <span id="liveRecentTrades">N/A</span></p>
-                        <p class="text-xs text-gray-500 mt-4">Note: Real-time updates for live trading require backend integration (e.g., WebSockets or continuous polling) to fetch ongoing data.</p>
-                    </div>
-                    <div class="pt-4 text-center">
-                        <button type="button" id="stopLiveTradingButton" class="secondary-button text-red-400 border-red-400 hover:bg-red-500 hover:text-white px-6 py-3 rounded-lg font-semibold shadow-lg hidden">Stop Live Session</button>
-                    </div>
-                </div>
                 <p class="text-xs text-center text-gray-500 mt-8">Results will appear above after processing.</p>
             </div>
         </section>
@@ -247,6 +281,7 @@
             <p class="text-xs text-gray-500 mt-1">For demonstration and educational purposes only. Trading involves risk.</p>
         </div>
     </footer>
+
 
     <script>
         // Mobile menu toggle
@@ -320,8 +355,8 @@
                 event.preventDefault(); // Prevent default HTML form submission
                 console.log("Backtesting form submitted via JS."); // For debugging
 
-                // Hide live trading results if visible
-                liveTradingResultsArea.classList.add('hidden');
+                // Hide live signal dashboard if visible
+                liveSignalDashboard.classList.add('hidden');
 
                 statusText.textContent = 'Submitting backtest job...';
                 modeText.textContent = 'Backtest';
@@ -365,7 +400,7 @@
                     if (data.status === 'completed' && data.results) {
                         equityCurvePlaceholder.innerHTML = `<img src="${data.results.equity_curve_url}?t=${new Date().getTime()}" alt="Equity Curve for Job ${data.job_id}" class="mx-auto rounded-md max-h-full"/>`;
                         finalEquityText.textContent = data.results.final_equity ? `$${Number(data.results.final_equity).toFixed(2)}` : 'N/A';
-                        let startBalance = parseFloat(formData.get('starting_balance_usd')) || 10000;
+                        let startBalance = parseFloat(formData.get('starting_balance_usd')) || 10000; // Get start balance from form data
                         let netPL = data.results.net_pl ? Number(data.results.net_pl) : 0;
                         let netPLPercent = (startBalance > 0) ? (netPL / startBalance) * 100 : 0;
                         netPLText.textContent = `${netPL.toFixed(2)} (${netPLPercent.toFixed(2)}%)`;
@@ -387,44 +422,163 @@
             });
         }
 
-        // JS for Live Paper Trading Form Submission
+        // JS for Live Paper Trading (Signal Generation) Form Submission
         const paperTradingForm = document.getElementById('paperTradingForm');
-        const liveTradingResultsArea = document.getElementById('liveTradingResultsArea'); // New live trading results area
-        const liveSessionStatus = document.getElementById('liveSessionStatus');
-        const liveSessionId = document.getElementById('liveSessionId');
-        const liveCurrentPL = document.getElementById('liveCurrentPL');
-        const liveRecentTrades = document.getElementById('liveRecentTrades');
-        const liveStatusDisplay = document.getElementById('liveStatusDisplay');
-        const stopLiveTradingButton = document.getElementById('stopLiveTradingButton');
+        const liveSignalDashboard = document.getElementById('liveSignalDashboard'); // New Signal Dashboard section
+        const currentBtcPrice = document.getElementById('currentBtcPrice');
+        const aiSignal = document.getElementById('aiSignal');
+        const walletUsdBalance = document.getElementById('walletUsdBalance');
+        const walletBtcBalance = document.getElementById('walletBtcBalance');
+        const estimatedPL = document.getElementById('estimatedPL');
+        const recentActivityLog = document.getElementById('recentActivityLog');
+        const stopSignalGeneratorButton = document.getElementById('stopSignalGeneratorButton');
+
+        let liveSignalInterval; // To store the interval for live updates
+        let currentSimulatedUSD = 0;
+        let currentSimulatedBTC = 0;
+        let initialSimulatedUSD = 0;
+        const simulatedTradeAmount = parseFloat(document.getElementById('trade_amount_live').value);
+
+        function updateActivityLog(message, type = 'info') {
+            const logEntry = document.createElement('p');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (type === 'buy') logEntry.classList.add('text-green-400');
+            if (type === 'sell') logEntry.classList.add('text-red-400');
+            if (type === 'error') logEntry.classList.add('text-orange-400');
+            recentActivityLog.prepend(logEntry); // Add to top
+            // Keep log size reasonable
+            while (recentActivityLog.children.length > 20) {
+                recentActivityLog.removeChild(recentActivityLog.lastChild);
+            }
+        }
+
+        // Mock CoinGecko Price Fetching (replace with actual API call)
+        async function fetchLiveBtcPrice() {
+            try {
+                // Using a public proxy for CoinGecko API for demonstration purposes.
+                // For production, consider direct API or a more robust proxy.
+                // CoinGecko API: https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const price = data.bitcoin.usd;
+                currentBtcPrice.textContent = `$ ${price.toFixed(2)}`;
+                updateEstimatedPL(price); // Update P/L with new price
+                return price;
+            } catch (error) {
+                console.error("Error fetching BTC price from CoinGecko:", error);
+                currentBtcPrice.textContent = "$ --.-- (Error)";
+                updateActivityLog(`Error fetching price: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Function to update Estimated P/L
+        function updateEstimatedPL(currentPrice) {
+            if (currentPrice === null || isNaN(currentPrice)) return;
+
+            const totalEquity = currentSimulatedUSD + (currentSimulatedBTC * currentPrice);
+            const netPL = totalEquity - initialSimulatedUSD;
+            const netPLPercent = (initialSimulatedUSD > 0) ? (netPL / initialSimulatedUSD) * 100 : 0;
+
+            estimatedPL.textContent = `$ ${netPL.toFixed(2)} (${netPLPercent.toFixed(2)}%)`;
+            if (netPL > 0) {
+                estimatedPL.classList.remove('text-red-400');
+                estimatedPL.classList.add('text-green-400');
+            } else if (netPL < 0) {
+                estimatedPL.classList.remove('text-green-400');
+                estimatedPL.classList.add('text-red-400');
+            } else {
+                estimatedPL.classList.remove('text-green-400', 'text-red-400');
+                estimatedPL.classList.add('text-white'); // Default color
+            }
+        }
+
+        // Function to simulate AI signal and update UI
+        // In a real scenario, this would poll your Flask backend for signals generated by live_trading.py
+        async function getAndDisplayAISignal() {
+            const currentPrice = parseFloat(currentBtcPrice.textContent.replace('$', '').replace(',', ''));
+            if (isNaN(currentPrice)) {
+                updateActivityLog("Waiting for price data...", 'error');
+                return;
+            }
+
+            // Conceptual API call to your Flask backend to get the latest signal and balances
+            // Your Flask backend would run live_trading.py and expose an endpoint to report its status
+            try {
+                const response = await fetch('/get-live-signal-status', {
+                    method: 'POST', // Or GET, depending on your backend
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_price: currentPrice }) // Send current price for P/L calculation on backend if needed
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("Received live signal data:", data);
+
+                // Update UI based on data from backend
+                const signal = data.signal || 'HOLD';
+                const usd_balance = data.usd_balance !== undefined ? data.usd_balance : currentSimulatedUSD;
+                const btc_balance = data.btc_balance !== undefined ? data.btc_balance : currentSimulatedBTC;
+                const message = data.message || `AI signaled ${signal}.`;
+
+                aiSignal.textContent = signal;
+                aiSignal.className = 'signal-text'; // Reset classes
+                if (signal === 'BUY') aiSignal.classList.add('signal-buy');
+                else if (signal === 'SELL') aiSignal.classList.add('signal-sell');
+                else aiSignal.classList.add('signal-hold');
+
+                // Update wallet and P/L
+                currentSimulatedUSD = usd_balance;
+                currentSimulatedBTC = btc_balance;
+                walletUsdBalance.textContent = `$ ${currentSimulatedUSD.toFixed(2)}`;
+                walletBtcBalance.textContent = `${currentSimulatedBTC.toFixed(4)} BTC`;
+                updateEstimatedPL(currentPrice); // Recalculate P/L with updated balances and current price
+
+                updateActivityLog(message, signal.toLowerCase()); // Log the signal
+
+            } catch (error) {
+                console.error("Error fetching live signal:", error);
+                updateActivityLog(`Error getting signal: ${error.message}`, 'error');
+                aiSignal.textContent = "Error";
+                aiSignal.className = 'signal-text text-red-400';
+            }
+        }
 
 
         if (paperTradingForm) {
             paperTradingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                console.log("Live Paper Trading form submitted via JS.");
+                console.log("Start AI Signal Generator form submitted via JS.");
 
                 // Hide backtesting results if visible
                 resultsArea.classList.add('hidden');
 
-                // Display the live trading results area
-                liveTradingResultsArea.classList.remove('hidden');
+                // Show the live signal dashboard
+                liveSignalDashboard.classList.remove('hidden');
+                stopSignalGeneratorButton.classList.remove('hidden');
 
-                liveSessionStatus.textContent = 'Starting...';
-                liveSessionId.textContent = 'Generating...';
-                liveCurrentPL.textContent = 'N/A';
-                liveRecentTrades.textContent = 'N/A';
-                liveStatusDisplay.innerHTML = '<p>Initiating live paper trading session...</p><div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-green-500 mx-auto my-4"></div>';
-                stopLiveTradingButton.classList.add('hidden'); // Hide stop button initially
+                // Reset display
+                currentBtcPrice.textContent = '$ --.--';
+                aiSignal.textContent = 'HOLD';
+                aiSignal.className = 'signal-text text-gray-500';
+                walletUsdBalance.textContent = '$ 0.00';
+                walletBtcBalance.textContent = '0.0000 BTC';
+                estimatedPL.textContent = '$ 0.00 (0.00%)';
+                recentActivityLog.innerHTML = '<p>Initiating AI Signal Generator...</p>';
 
+                initialSimulatedUSD = parseFloat(document.getElementById('initial_usd_balance_live').value);
+                currentSimulatedUSD = initialSimulatedUSD;
+                currentSimulatedBTC = 0; // Start with 0 BTC
+
+                // Send initial request to Flask backend to start the AI process
                 const formData = new FormData(paperTradingForm);
-
-                // In a real application, you would send this to a backend endpoint
-                // that starts the live trading process and returns a session ID.
-                // For this example, we'll simulate a response.
                 try {
-                    // This is a conceptual fetch call. You would need to create a Flask endpoint
-                    // (e.g., /start-live-paper-trading) in your app.py to handle this.
-                    const response = await fetch('/start-live-paper-trading', {
+                    const response = await fetch('/start-live-signal-generator', { // NEW ENDPOINT
                         method: 'POST',
                         body: formData
                     });
@@ -435,69 +589,56 @@
                         try {
                             errorData = JSON.parse(errorText);
                         } catch (e) { /* Ignore if not JSON */ }
-                        console.error("Server error response:", errorData);
                         throw new Error(`HTTP error ${response.status}: ${errorData.error || errorData.detail || response.statusText}`);
                     }
 
                     const data = await response.json();
-                    console.log("Received data from live trading backend:", data);
+                    console.log("Backend response for starting signal generator:", data);
+                    updateActivityLog(`Signal generator started. Session ID: ${data.session_id || 'N/A'}`, 'info');
 
-                    if (data.status === 'started' || data.status === 'success') {
-                        liveSessionStatus.textContent = 'Running';
-                        liveSessionId.textContent = data.session_id || 'LIVE-' + Date.now(); // Use actual ID or generate
-                        liveStatusDisplay.innerHTML = `<p class="text-green-400">Live Paper Trading Session Started! Session ID: ${liveSessionId.textContent}</p><p>Monitoring for updates...</p>`;
-                        stopLiveTradingButton.classList.remove('hidden');
+                    // Start fetching price and signals periodically
+                    // Fetch price immediately, then set interval
+                    await fetchLiveBtcPrice(); // Initial price fetch
+                    liveSignalInterval = setInterval(async () => {
+                        await fetchLiveBtcPrice(); // Fetch price first
+                        await getAndDisplayAISignal(); // Then get signal and update everything
+                    }, 10000); // Update every 10 seconds
 
-                        // Conceptual: In a real app, you'd set up a polling mechanism or WebSocket
-                        // to get continuous updates for liveCurrentPL, liveRecentTrades, etc.
-                        // For this example, we'll just set some mock data after a delay.
-                        setTimeout(() => {
-                            liveCurrentPL.textContent = '$+5.23'; // Mock data
-                            liveRecentTrades.textContent = '2 Buys, 1 Sell'; // Mock data
-                            liveStatusDisplay.innerHTML += '<p>Initial metrics loaded. Waiting for next update...</p>';
-                        }, 2000);
-
-                    } else if (data.error) {
-                        liveSessionStatus.textContent = 'Failed';
-                        liveStatusDisplay.innerHTML = `<p class="text-red-400">Error: ${data.error}</p><p>${data.details || ''}</p>`;
-                        stopLiveTradingButton.classList.add('hidden');
-                    }
                 } catch (error) {
-                    console.error('Error starting live paper trading:', error);
-                    liveSessionStatus.textContent = 'Failed to start';
-                    liveStatusDisplay.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Please check console.</p>`;
-                    stopLiveTradingButton.classList.add('hidden');
+                    console.error("Error starting AI Signal Generator:", error);
+                    updateActivityLog(`Failed to start AI Signal Generator: ${error.message}`, 'error');
+                    liveSignalDashboard.classList.add('hidden'); // Hide on error
+                    stopSignalGeneratorButton.classList.add('hidden');
                 }
             });
         }
 
-        if (stopLiveTradingButton) {
-            stopLiveTradingButton.addEventListener('click', async () => {
-                liveSessionStatus.textContent = 'Stopping...';
-                liveStatusDisplay.innerHTML = '<p>Stopping live paper trading session...</p>';
-                stopLiveTradingButton.disabled = true;
+        if (stopSignalGeneratorButton) {
+            stopSignalGeneratorButton.addEventListener('click', async () => {
+                clearInterval(liveSignalInterval); // Stop the periodic updates
+                updateActivityLog("Stopping AI Signal Generator...", 'info');
+                stopSignalGeneratorButton.disabled = true;
 
                 try {
-                    // Conceptual: Send a request to your Flask backend to stop the session
-                    const response = await fetch('/stop-live-paper-trading', {
+                    // Conceptual: Send a request to your Flask backend to stop the AI process
+                    const response = await fetch('/stop-live-signal-generator', { // NEW ENDPOINT
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ sessionId: liveSessionId.textContent })
+                        body: JSON.stringify({ sessionId: 'your_session_id_here' }) // Pass session ID if tracked
                     });
 
                     if (response.ok) {
                         const data = await response.json();
-                        liveSessionStatus.textContent = data.status || 'Stopped';
-                        liveStatusDisplay.innerHTML = `<p class="text-blue-400">Live Paper Trading Session ${liveSessionId.textContent} stopped.</p>`;
+                        updateActivityLog(`AI Signal Generator ${data.status || 'stopped'}.`, 'info');
                     } else {
-                        throw new Error('Failed to stop session.');
+                        throw new Error('Failed to stop signal generator on backend.');
                     }
                 } catch (error) {
-                    console.error('Error stopping live paper trading:', error);
-                    liveStatusDisplay.innerHTML = `<p class="text-red-400">Error stopping session: ${error.message}</p>`;
+                    console.error('Error stopping AI Signal Generator:', error);
+                    updateActivityLog(`Error stopping generator: ${error.message}`, 'error');
                 } finally {
-                    stopLiveTradingButton.disabled = false;
-                    stopLiveTradingButton.classList.add('hidden'); // Hide after stopping
+                    stopSignalGeneratorButton.disabled = false;
+                    liveSignalDashboard.classList.add('hidden'); // Hide the dashboard
                 }
             });
         }

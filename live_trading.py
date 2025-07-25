@@ -1,147 +1,122 @@
-#!/usr/bin/env python
-
 import os
 import time
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import pandas as pd
-from binance.client import Client
+import requests
 
-from my_backtester_logic import (
-    calculate_rsi,
-    calculate_atr,
-    get_gpt_action_for_web,
-)
+from my_backtester_logic import calculate_rsi, calculate_atr, get_gpt_action_for_web
 
 logger = logging.getLogger("LiveTrading")
 if not logger.handlers:
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "[%(asctime)s] [%(levelname)s] [LiveTrading] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [LiveTrading] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-
-SYMBOL = os.getenv("BINANCE_SYMBOL", "BTCUSDT")
-INTERVAL = os.getenv("BINANCE_INTERVAL", "1m")
+COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+LIVE_REPORT_INTERVAL_SECONDS = int(os.getenv("LIVE_REPORT_INTERVAL_SECONDS", "5"))
+FLASK_STATUS_ENDPOINT = os.getenv("FLASK_STATUS_ENDPOINT", "http://localhost:5000/update-live-signal-status")
 LOOKBACK_MINUTES = int(os.getenv("LOOKBACK_MINUTES", "60"))
-TRADE_AMOUNT = float(os.getenv("TRADE_AMOUNT_BTC", "0.001"))
-USER_PROMPT = os.getenv("LIVE_TRADING_PROMPT", "")
 
+class SimulatedTrader:
+    def __init__(self, initial_usd_balance: float = 10000.0):
+        self.initial_usd_balance = initial_usd_balance
+        self.usdt_balance = initial_usd_balance
+        self.btc_balance = 0.0
+        self.trade_log = []
 
-class BinanceTrader:
-    def __init__(self, api_key: str, api_secret: str):
-        self.client = Client(api_key, api_secret)
+    def simulate_buy(self, qty_btc: float, price: float) -> None:
+        cost = qty_btc * price
+        if self.usdt_balance >= cost:
+            self.usdt_balance -= cost
+            self.btc_balance += qty_btc
+            self.trade_log.append({"time": datetime.utcnow(), "action": "BUY", "qty": qty_btc, "price": price})
 
-    def get_recent_data(self):
-        klines = self.client.get_klines(
-            symbol=SYMBOL,
-            interval=INTERVAL,
-            limit=LOOKBACK_MINUTES,
-        )
-        df = pd.DataFrame(
-            klines,
-            columns=[
-                "open_time",
-                "open",
-                "high",
-                "low",
-                "close",
-                "volume",
-                "close_time",
-                "quote_asset_volume",
-                "num_trades",
-                "taker_buy_base_asset_volume",
-                "taker_buy_quote_asset_volume",
-                "ignore",
-            ],
-        )
-        df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
-        df.set_index("open_time", inplace=True)
-        df = df.astype(
-            {
-                "open": float,
-                "high": float,
-                "low": float,
-                "close": float,
-                "volume": float,
-            }
-        )
-        df["sma_30"] = df["close"].rolling(window=30, min_periods=1).mean()
-        df["sma_60"] = df["close"].rolling(window=60, min_periods=1).mean()
-        df["volatility"] = df["close"].rolling(window=30, min_periods=1).std()
-        df["rsi"] = calculate_rsi(df["close"])
-        df["atr"] = calculate_atr(df["high"], df["low"], df["close"])
-        df.dropna(inplace=True)
-        return df
+    def simulate_sell(self, qty_btc: float, price: float) -> None:
+        if self.btc_balance >= qty_btc:
+            self.btc_balance -= qty_btc
+            self.usdt_balance += qty_btc * price
+            self.trade_log.append({"time": datetime.utcnow(), "action": "SELL", "qty": qty_btc, "price": price})
 
-    def get_balances(self):
-        btc_balance = float(self.client.get_asset_balance(asset="BTC")["free"])
-        usdt_balance = float(self.client.get_asset_balance(asset="USDT")["free"])
-        return btc_balance, usdt_balance
+    def get_net_pl(self, current_price: float) -> float:
+        total_equity = self.usdt_balance + self.btc_balance * current_price
+        return total_equity - self.initial_usd_balance
 
-    def market_buy(self, qty):
-        logger.info(f"Placing BUY order for {qty} {SYMBOL}")
-        self.client.create_order(
-            symbol=SYMBOL,
-            side=Client.SIDE_BUY,
-            type=Client.ORDER_TYPE_MARKET,
-            quantity=qty,
-        )
-
-    def market_sell(self, qty):
-        logger.info(f"Placing SELL order for {qty} {SYMBOL}")
-        self.client.create_order(
-            symbol=SYMBOL,
-            side=Client.SIDE_SELL,
-            type=Client.ORDER_TYPE_MARKET,
-            quantity=qty,
-        )
-
+class CoinGeckoDataFetcher:
+    def get_current_price(self) -> float | None:
+        try:
+            resp = requests.get(COINGECKO_API_URL)
+            resp.raise_for_status()
+            data = resp.json()
+            return data.get("bitcoin", {}).get("usd")
+        except requests.exceptions.RequestException as exc:
+            logger.error(f"Error fetching price from CoinGecko: {exc}")
+            return None
 
 def run_live_trading():
-    api_key = os.getenv("BINANCE_API_KEY")
-    api_secret = os.getenv("BINANCE_API_SECRET")
     openai_key = os.getenv("OPENAI_API_KEY")
+    user_prompt = os.getenv("LIVE_TRADING_PROMPT", "")
+    initial_usd_balance = float(os.getenv("INITIAL_USD_BALANCE_LIVE", "10000"))
+    trade_amount_btc = float(os.getenv("TRADE_AMOUNT_LIVE", "0.01"))
+    session_id = os.getenv("LIVE_SESSION_ID", "N/A")
 
-    if not api_key or not api_secret or not openai_key or not USER_PROMPT:
+    if not openai_key or not user_prompt:
         logger.error("Missing required environment variables for live trading.")
         return
 
-    trader = BinanceTrader(api_key, api_secret)
+    fetcher = CoinGeckoDataFetcher()
+    trader = SimulatedTrader(initial_usd_balance)
+    last_report = 0.0
 
     while True:
-        try:
-            df = trader.get_recent_data()
-            btc_balance, usdt_balance = trader.get_balances()
-            entry_price = df["close"].iloc[-1]
+        price = fetcher.get_current_price()
+        if price is None:
+            time.sleep(LIVE_REPORT_INTERVAL_SECONDS)
+            continue
 
-            action, confidence, reasoning, _ = get_gpt_action_for_web(
-                df.tail(10),
-                usdt_balance,
-                btc_balance,
-                TRADE_AMOUNT,
-                entry_price,
-                USER_PROMPT,
-                openai_key,
-                0,
-                "gpt-4o",
-            )
-            logger.info(f"GPT action: {action} ({confidence:.1f}%) - {reasoning}")
+        df_slice = pd.DataFrame([{"open_time": datetime.now(), "open": price, "high": price, "low": price,
+                                   "close": price, "volume": 0, "sma_30": price, "sma_60": price,
+                                   "volatility": 0, "rsi": 50, "atr": 0}], index=[datetime.now()])
 
-            if action == "BUY" and usdt_balance >= TRADE_AMOUNT * entry_price:
-                trader.market_buy(TRADE_AMOUNT)
-            elif action == "SELL" and btc_balance >= TRADE_AMOUNT:
-                trader.market_sell(TRADE_AMOUNT)
-        except Exception as e:
-            logger.error(f"Live trading loop error: {e}")
+        action, confidence, reasoning, _ = get_gpt_action_for_web(
+            df_slice.tail(LOOKBACK_MINUTES),
+            trader.usdt_balance,
+            trader.btc_balance,
+            trade_amount_btc,
+            price,
+            user_prompt,
+            openai_key,
+            0,
+            "gpt-4o",
+        )
+        logger.info(f"GPT Signal: {action} ({confidence:.1f}%) - {reasoning}")
 
-        logger.info("Sleeping for 30 minutes...")
-        time.sleep(30 * 60)
+        if action == "BUY":
+            trader.simulate_buy(trade_amount_btc, price)
+        elif action == "SELL":
+            trader.simulate_sell(trade_amount_btc, price)
 
+        if time.time() - last_report >= LIVE_REPORT_INTERVAL_SECONDS:
+            payload = {
+                "session_id": session_id,
+                "signal": action,
+                "current_price": price,
+                "usd_balance": trader.usdt_balance,
+                "btc_balance": trader.btc_balance,
+                "estimated_pl": trader.get_net_pl(price),
+                "message": f"AI signaled {action}.",
+            }
+            try:
+                requests.post(FLASK_STATUS_ENDPOINT, json=payload, timeout=5)
+                logger.info("Reported live status to Flask backend.")
+            except Exception as exc:
+                logger.error(f"Error reporting status: {exc}")
+            last_report = time.time()
+
+        time.sleep(LIVE_REPORT_INTERVAL_SECONDS)
 
 if __name__ == "__main__":
     run_live_trading()
+

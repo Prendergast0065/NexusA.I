@@ -15,6 +15,7 @@ import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
 import subprocess  # For launching background processes
 import threading  # For basic process tracking
+import json
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -63,6 +64,7 @@ login_manager.login_view = "login_page"
 # Track background live trading processes keyed by user ID
 background_processes = {}
 process_lock = threading.Lock()
+latest_live_signal_status = {}
 
 
 def hash_pw(password: str) -> str:
@@ -418,6 +420,61 @@ def handle_run_backtest():
 
 
 # --- Routes to control live paper trading ---
+
+@app.route("/start-live-signal-generator", methods=["POST"])
+@login_required
+def start_live_signal_generator():
+    """Launch live_trading.py as a background process with user parameters."""
+    with process_lock:
+        if background_processes.get(current_user.id):
+            return jsonify({"error": "Signal generator already running"}), 400
+        env = os.environ.copy()
+        env["LIVE_TRADING_PROMPT"] = request.form.get("live_strategy_prompt", "")
+        env["INITIAL_USD_BALANCE_LIVE"] = request.form.get("initial_usd_balance_live", "10000")
+        env["TRADE_AMOUNT_LIVE"] = request.form.get("trade_amount_live", "0.01")
+        session_id = str(uuid.uuid4())
+        env["LIVE_SESSION_ID"] = session_id
+        proc = subprocess.Popen(["python", "live_trading.py"], env=env)
+        background_processes[current_user.id] = proc
+        app.logger.info(f"Started signal generator {proc.pid} for user {current_user.id}")
+    return jsonify({"status": "started", "session_id": session_id})
+
+
+@app.route("/update-live-signal-status", methods=["POST"])
+def update_live_signal_status():
+    """Receive status updates from live_trading.py"""
+    global latest_live_signal_status
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        app.logger.error(f"Invalid status payload: {e}")
+        return jsonify({"error": "invalid json"}), 400
+    latest_live_signal_status = data
+    return jsonify({"status": "ok"})
+
+
+@app.route("/get-live-signal-status", methods=["GET", "POST"])
+def get_live_signal_status():
+    """Return the latest signal generator status"""
+    return jsonify(latest_live_signal_status)
+
+
+@app.route("/stop-live-signal-generator", methods=["POST"])
+@login_required
+def stop_live_signal_generator():
+    """Terminate the user's signal generator process if running."""
+    with process_lock:
+        proc = background_processes.get(current_user.id)
+        if not proc:
+            return jsonify({"error": "No live trading process found"}), 404
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            proc.kill()
+        background_processes.pop(current_user.id, None)
+    return jsonify({"status": "stopped"})
+
 @app.route("/start-live-paper-trading", methods=["POST"])
 @login_required
 def start_live_paper_trading():
