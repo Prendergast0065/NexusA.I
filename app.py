@@ -13,6 +13,8 @@ import os
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
+import subprocess  # For launching background processes
+import threading  # For basic process tracking
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -57,6 +59,10 @@ migrate = Migrate(app, db)
 # Login manager setup
 login_manager = LoginManager(app)
 login_manager.login_view = "login_page"
+
+# Track background live trading processes keyed by user ID
+background_processes = {}
+process_lock = threading.Lock()
 
 
 def hash_pw(password: str) -> str:
@@ -409,6 +415,40 @@ def handle_run_backtest():
                 ),
                 500,
             )
+
+
+# --- Routes to control live paper trading ---
+@app.route("/start-live-paper-trading", methods=["POST"])
+@login_required
+def start_live_paper_trading():
+    """Launch the live_trading.py script as a background process."""
+    with process_lock:
+        if background_processes.get(current_user.id):
+            return jsonify({"error": "Live trading already running"}), 400
+        proc = subprocess.Popen(["python", "live_trading.py"])
+        background_processes[current_user.id] = proc
+        app.logger.info(
+            f"Started live trading process {proc.pid} for user {current_user.id}"
+        )
+    return jsonify({"status": "started", "pid": proc.pid})
+
+
+@app.route("/stop-live-paper-trading", methods=["POST"])
+@login_required
+def stop_live_paper_trading():
+    """Terminate the user's live trading background process if running."""
+    with process_lock:
+        proc = background_processes.get(current_user.id)
+        if not proc:
+            return jsonify({"error": "No live trading process found"}), 404
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            proc.kill()
+        background_processes.pop(current_user.id, None)
+        app.logger.info(f"Stopped live trading process for user {current_user.id}")
+    return jsonify({"status": "stopped"})
 
 
 # Route to serve result files from the dynamic job_id subdirectories
