@@ -58,3 +58,25 @@ A simple `render.yaml` is included for deployment to Render. Adjust the environm
 The `/users` page lists all registered accounts, showing each user's ID, email
 and payment status. Access to this page is restricted to the address specified
 by `ADMIN_EMAIL`.
+
+## Live Trading (Experimental)
+
+An optional `live_trading.py` script connects to the Binance Spot API and
+periodically asks ChatGPT for a trading action. Every 30 minutes the script
+gathers recent price data, sends your custom prompt to OpenAI, and places a
+market **BUY** or **SELL** order based on the response.
+
+Environment variables required for live trading:
+
+- `BINANCE_API_KEY` and `BINANCE_API_SECRET` – your Binance credentials
+- `LIVE_TRADING_PROMPT` – the prompt describing your strategy
+- `TRADE_AMOUNT_BTC` – amount of BTC to trade each cycle (default `0.001`)
+
+Run it with:
+
+```bash
+python live_trading.py
+```
+
+**Use at your own risk.** This example is for educational purposes only and does
+not guarantee profits or prevent losses.
