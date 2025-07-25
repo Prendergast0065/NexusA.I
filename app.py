@@ -64,7 +64,20 @@ login_manager.login_view = "login_page"
 # Track background live trading processes keyed by user ID
 background_processes = {}
 process_lock = threading.Lock()
-latest_live_signal_status = {}
+
+# Store the latest status from the live signal generator
+latest_live_signal_status = {
+    "signal": "HOLD",
+    "current_price": None,
+    "usd_balance": 0.0,
+    "btc_balance": 0.0,
+    "estimated_pl": 0.0,
+    "message": "AI Signal Generator is not active.",
+    "type": "info",
+}
+
+# Processes launched via /start-live-signal-generator tracked by session ID
+running_live_signal_processes = {}
 
 
 def hash_pw(password: str) -> str:
@@ -425,19 +438,68 @@ def handle_run_backtest():
 @login_required
 def start_live_signal_generator():
     """Launch live_trading.py as a background process with user parameters."""
-    with process_lock:
-        if background_processes.get(current_user.id):
-            return jsonify({"error": "Signal generator already running"}), 400
-        env = os.environ.copy()
-        env["LIVE_TRADING_PROMPT"] = request.form.get("live_strategy_prompt", "")
-        env["INITIAL_USD_BALANCE_LIVE"] = request.form.get("initial_usd_balance_live", "10000")
-        env["TRADE_AMOUNT_LIVE"] = request.form.get("trade_amount_live", "0.01")
+    try:
+        strategy_prompt = request.form.get("live_strategy_prompt")
+        initial_usd_balance = request.form.get("initial_usd_balance_live", "10000.0")
+        trade_amount_btc = request.form.get("trade_amount_live", "0.01")
+
+        if not strategy_prompt:
+            return jsonify({"error": "Live strategy prompt is required."}), 400
+
         session_id = str(uuid.uuid4())
-        env["LIVE_SESSION_ID"] = session_id
-        proc = subprocess.Popen(["python", "live_trading.py"], env=env)
-        background_processes[current_user.id] = proc
-        app.logger.info(f"Started signal generator {proc.pid} for user {current_user.id}")
-    return jsonify({"status": "started", "session_id": session_id})
+        app.logger.info(f"Starting AI Signal Generator session: {session_id}")
+
+        global latest_live_signal_status
+        latest_live_signal_status = {
+            "signal": "HOLD",
+            "current_price": None,
+            "usd_balance": float(initial_usd_balance),
+            "btc_balance": 0.0,
+            "estimated_pl": 0.0,
+            "message": "AI Signal Generator starting...",
+            "type": "info",
+            "session_id": session_id,
+        }
+
+        live_trading_env = os.environ.copy()
+        live_trading_env["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY", "")
+        live_trading_env["LIVE_TRADING_PROMPT"] = strategy_prompt
+        live_trading_env["INITIAL_USD_BALANCE_LIVE"] = initial_usd_balance
+        live_trading_env["TRADE_AMOUNT_LIVE"] = trade_amount_btc
+        live_trading_env["LIVE_SESSION_ID"] = session_id
+        live_trading_env["FLASK_STATUS_ENDPOINT"] = url_for("update_live_signal_status", _external=True)
+
+        def run_signal_script_in_background(current_session_id, env_vars):
+            try:
+                process = subprocess.Popen(
+                    ["python", "live_trading.py"],
+                    env=env_vars,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                running_live_signal_processes[current_session_id] = process
+                stdout, stderr = process.communicate()
+                app.logger.info(f"Signal generator {current_session_id} STDOUT:\n{stdout}")
+                app.logger.error(f"Signal generator {current_session_id} STDERR:\n{stderr}")
+            except Exception as e:
+                app.logger.error(f"Error running signal generator {current_session_id}: {e}")
+            finally:
+                if current_session_id in running_live_signal_processes:
+                    del running_live_signal_processes[current_session_id]
+                if latest_live_signal_status.get("session_id") == current_session_id:
+                    latest_live_signal_status.update({
+                        "signal": "HOLD",
+                        "message": "AI Signal Generator finished or stopped.",
+                        "type": "info",
+                    })
+
+        threading.Thread(target=run_signal_script_in_background, args=(session_id, live_trading_env)).start()
+
+        return jsonify({"status": "started", "session_id": session_id, "message": "AI Signal Generator initiated."}), 200
+    except Exception as e:
+        app.logger.error(f"Error starting AI Signal Generator: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred.", "details": str(e)}), 500
 
 
 @app.route("/update-live-signal-status", methods=["POST"])
@@ -445,12 +507,13 @@ def update_live_signal_status():
     """Receive status updates from live_trading.py"""
     global latest_live_signal_status
     try:
-        data = request.get_json(force=True)
+        data = request.json
+        if latest_live_signal_status.get("session_id") == data.get("session_id") or not latest_live_signal_status.get("session_id"):
+            latest_live_signal_status.update(data)
+        return jsonify({"status": "success"}), 200
     except Exception as e:
-        app.logger.error(f"Invalid status payload: {e}")
-        return jsonify({"error": "invalid json"}), 400
-    latest_live_signal_status = data
-    return jsonify({"status": "ok"})
+        app.logger.error(f"Error updating live signal status: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/get-live-signal-status", methods=["GET", "POST"])
@@ -463,17 +526,23 @@ def get_live_signal_status():
 @login_required
 def stop_live_signal_generator():
     """Terminate the user's signal generator process if running."""
-    with process_lock:
-        proc = background_processes.get(current_user.id)
-        if not proc:
-            return jsonify({"error": "No live trading process found"}), 404
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except Exception:
-            proc.kill()
-        background_processes.pop(current_user.id, None)
-    return jsonify({"status": "stopped"})
+    try:
+        session_id = request.json.get("sessionId")
+        if not session_id:
+            session_id = latest_live_signal_status.get("session_id")
+            if not session_id:
+                return jsonify({"error": "No active session to stop."}), 400
+
+        process = running_live_signal_processes.get(session_id)
+        if process:
+            process.terminate()
+            app.logger.info(f"Sent terminate signal to signal generator process for session {session_id}.")
+            return jsonify({"status": "stopping", "message": f"Signal sent to stop session {session_id}."}), 200
+        else:
+            return jsonify({"error": f"Session {session_id} not found or already stopped."}), 404
+    except Exception as e:
+        app.logger.error(f"Error stopping signal generator: {e}", exc_info=True)
+        return jsonify({"error": "An internal server error occurred.", "details": str(e)}), 500
 
 @app.route("/start-live-paper-trading", methods=["POST"])
 @login_required

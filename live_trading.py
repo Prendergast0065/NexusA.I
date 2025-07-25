@@ -16,8 +16,12 @@ if not logger.handlers:
 logger.setLevel(logging.INFO)
 
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
-LIVE_REPORT_INTERVAL_SECONDS = int(os.getenv("LIVE_REPORT_INTERVAL_SECONDS", "5"))
-FLASK_STATUS_ENDPOINT = os.getenv("FLASK_STATUS_ENDPOINT", "http://localhost:5000/update-live-signal-status")
+LIVE_REPORT_INTERVAL_SECONDS = int(os.getenv("LIVE_REPORT_INTERVAL_SECONDS", "15"))
+FLASK_STATUS_ENDPOINT = os.getenv("FLASK_STATUS_ENDPOINT")
+if not FLASK_STATUS_ENDPOINT:
+    logger.error(
+        "FLASK_STATUS_ENDPOINT environment variable not set. Live trading will not report status."
+    )
 LOOKBACK_MINUTES = int(os.getenv("LOOKBACK_MINUTES", "60"))
 
 class SimulatedTrader:
@@ -108,11 +112,14 @@ def run_live_trading():
                 "estimated_pl": trader.get_net_pl(price),
                 "message": f"AI signaled {action}.",
             }
-            try:
-                requests.post(FLASK_STATUS_ENDPOINT, json=payload, timeout=5)
-                logger.info("Reported live status to Flask backend.")
-            except Exception as exc:
-                logger.error(f"Error reporting status: {exc}")
+            if FLASK_STATUS_ENDPOINT:
+                try:
+                    requests.post(FLASK_STATUS_ENDPOINT, json=payload, timeout=5)
+                    logger.info("Reported live status to Flask backend.")
+                except Exception as exc:
+                    logger.error(f"Error reporting status: {exc}")
+            else:
+                logger.error("FLASK_STATUS_ENDPOINT not configured, cannot report status to Flask.")
             last_report = time.time()
 
         time.sleep(LIVE_REPORT_INTERVAL_SECONDS)
