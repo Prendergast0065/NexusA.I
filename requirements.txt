@@ -11,3 +11,4 @@ matplotlib
 tqdm
 pillow
 gunicorn
+python-binance
