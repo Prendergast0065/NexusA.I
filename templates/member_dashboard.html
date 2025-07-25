@@ -371,11 +371,39 @@
 
         const paperTradingForm = document.getElementById('paperTradingForm');
         if (paperTradingForm) {
-            paperTradingForm.addEventListener('submit', (e) => {
+            paperTradingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                alert("Live Paper Trading form submitted.");
-                // ... (mock display logic similar to backtest if needed) ...
+                statusText.textContent = 'Starting live session...';
+                modeText.textContent = 'Live';
+                resultsArea.classList.remove('hidden');
+                try {
+                    const res = await fetch('/start-live-trading', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.error) {
+                        statusText.textContent = `Error: ${data.error}`;
+                    } else {
+                        statusText.textContent = data.status || 'running';
+                    }
+                } catch (err) {
+                    statusText.textContent = 'Failed to start live trading.';
+                }
             });
+
+            async function fetchLiveStatus() {
+                try {
+                    const res = await fetch('/live-status');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.status) {
+                        statusText.textContent = data.status;
+                    }
+                    if (data.action) {
+                        equityCurvePlaceholder.innerHTML = `<p>Last action: ${data.action} (${data.confidence?.toFixed(1)}%)</p><p>${data.reasoning || ''}</p>`;
+                    }
+                } catch (_) {}
+            }
+
+            setInterval(fetchLiveStatus, 10000);
         }
     </script>
 
