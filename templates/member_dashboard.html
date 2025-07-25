@@ -214,9 +214,27 @@
                 </div>
 
                 <div id="resultsArea" class="mt-12 lab-section p-6 sm:p-8 rounded-xl shadow-2xl hidden">
-                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Session Results</h3>
+                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Backtest Session Results</h3>
                     <div id="equityCurvePlaceholder" class="bg-gray-700 min-h-[200px] rounded-md flex items-center justify-center text-gray-400 mb-6">Equity Curve / Performance Chart Will Appear Here</div>
                     <div id="statsPlaceholder" class="text-gray-300 space-y-2"><p><strong>Status:</strong> <span id="statusText">Pending...</span></p><p><strong>Mode:</strong> <span id="modeText">-</span></p><p><strong>Job ID:</strong> <span id="jobIdText">-</span></p><p><strong>Final Equity:</strong> <span id="finalEquityText">-</span></p><p><strong>Net P/L:</strong> <span id="netPLText">-</span></p><p><strong>Total Trades:</strong> <span id="totalTradesText">-</span></p><p><a href="#" id="tradeLogLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">Download Full Trade Log (CSV)</a></p><p><a href="#" id="equityCurveLink" class="text-blue-400 hover:underline" style="display:none;" target="_blank">View Equity Curve Image</a></p></div>
+                </div>
+
+                <div id="liveTradingResultsArea" class="mt-12 lab-section p-6 sm:p-8 rounded-xl shadow-2xl hidden">
+                    <h3 class="text-2xl font-semibold text-white mb-6 text-center">Live Paper Trading Session Status</h3>
+                    <div class="bg-gray-700 min-h-[100px] rounded-md flex items-center justify-center text-gray-400 mb-6" id="liveStatusDisplay">
+                        Waiting to start...
+                    </div>
+                    <div class="text-gray-300 space-y-2">
+                        <p><strong>Session Status:</strong> <span id="liveSessionStatus">Inactive</span></p>
+                        <p><strong>Mode:</strong> <span id="liveModeText">Live Paper Trading</span></p>
+                        <p><strong>Session ID:</strong> <span id="liveSessionId">N/A</span></p>
+                        <p><strong>Current P/L:</strong> <span id="liveCurrentPL">N/A</span></p>
+                        <p><strong>Recent Trades:</strong> <span id="liveRecentTrades">N/A</span></p>
+                        <p class="text-xs text-gray-500 mt-4">Note: Real-time updates for live trading require backend integration (e.g., WebSockets or continuous polling) to fetch ongoing data.</p>
+                    </div>
+                    <div class="pt-4 text-center">
+                        <button type="button" id="stopLiveTradingButton" class="secondary-button text-red-400 border-red-400 hover:bg-red-500 hover:text-white px-6 py-3 rounded-lg font-semibold shadow-lg hidden">Stop Live Session</button>
+                    </div>
                 </div>
                 <p class="text-xs text-center text-gray-500 mt-8">Results will appear above after processing.</p>
             </div>
@@ -273,7 +291,7 @@
 
         // JS for Backtesting Form Submission
         const backtestingForm = document.getElementById('backtestingForm');
-        const resultsArea = document.getElementById('resultsArea');
+        const resultsArea = document.getElementById('resultsArea'); // Backtest results area
         const statusText = document.getElementById('statusText');
         const modeText = document.getElementById('modeText');
         const jobIdText = document.getElementById('jobIdText');
@@ -283,11 +301,27 @@
         const totalTradesText = document.getElementById('totalTradesText');
         const tradeLogLink = document.getElementById('tradeLogLink');
         const equityCurveLink = document.getElementById('equityCurveLink');
+        const csvFileInput = document.getElementById('backtest_csv_data');
+        const builtinCheckbox = document.getElementById('use_builtin_btc');
+
+        if (builtinCheckbox) {
+            builtinCheckbox.addEventListener('change', () => {
+                csvFileInput.disabled = builtinCheckbox.checked;
+                // If using built-in data, clear any selected file
+                if (builtinCheckbox.checked) {
+                    csvFileInput.value = '';
+                }
+            });
+        }
+
 
         if (backtestingForm) {
             backtestingForm.addEventListener('submit', async function(event) {
                 event.preventDefault(); // Prevent default HTML form submission
                 console.log("Backtesting form submitted via JS."); // For debugging
+
+                // Hide live trading results if visible
+                liveTradingResultsArea.classList.add('hidden');
 
                 statusText.textContent = 'Submitting backtest job...';
                 modeText.textContent = 'Backtest';
@@ -299,24 +333,8 @@
 
                 const formData = new FormData(backtestingForm);
 
-                // Log FormData contents for debugging
-                // for (let [key, value] of formData.entries()) {
-                //     console.log("FormData: ", key, value);
-                // }
-                // Ensure file is correctly appended if not already handled by FormData(form)
-                const csvFileInput = document.getElementById('backtest_csv_data');
-                const builtinCheckbox = document.getElementById('use_builtin_btc');
-                if (builtinCheckbox) {
-                    builtinCheckbox.addEventListener('change', () => {
-                        csvFileInput.disabled = builtinCheckbox.checked;
-                    });
-                }
-                if (formData.get('dataSource') === 'csv' && csvFileInput.files.length > 0) {
-                    // FormData(form) should already include the file if the input has a name attribute.
-                    // If you were manually constructing FormData, you'd do:
-                    // formData.append('backtest_csv_data', csvFileInput.files[0]);
-                } else if (formData.get('dataSource') === 'csv' && csvFileInput.files.length === 0 && !(builtinCheckbox && builtinCheckbox.checked)) {
-                    statusText.textContent = 'Error: Please select a CSV file for backtesting.';
+                if (formData.get('dataSource') === 'csv' && csvFileInput.files.length === 0 && !(builtinCheckbox && builtinCheckbox.checked)) {
+                    statusText.textContent = 'Error: Please select a CSV file or use sample BTC data for backtesting.';
                     equityCurvePlaceholder.innerHTML = '<p class="text-red-400">Error: No CSV file selected.</p>';
                     return; // Stop if CSV is selected but no file
                 }
@@ -347,9 +365,9 @@
                     if (data.status === 'completed' && data.results) {
                         equityCurvePlaceholder.innerHTML = `<img src="${data.results.equity_curve_url}?t=${new Date().getTime()}" alt="Equity Curve for Job ${data.job_id}" class="mx-auto rounded-md max-h-full"/>`;
                         finalEquityText.textContent = data.results.final_equity ? `$${Number(data.results.final_equity).toFixed(2)}` : 'N/A';
-                        let startBalance = 10000; // Assuming default, ideally get this from config or response
+                        let startBalance = parseFloat(formData.get('starting_balance_usd')) || 10000;
                         let netPL = data.results.net_pl ? Number(data.results.net_pl) : 0;
-                        let netPLPercent = (netPL / startBalance) * 100;
+                        let netPLPercent = (startBalance > 0) ? (netPL / startBalance) * 100 : 0;
                         netPLText.textContent = `${netPL.toFixed(2)} (${netPLPercent.toFixed(2)}%)`;
                         totalTradesText.textContent = data.results.total_trades !== undefined ? data.results.total_trades : 'N/A';
 
@@ -369,12 +387,118 @@
             });
         }
 
+        // JS for Live Paper Trading Form Submission
         const paperTradingForm = document.getElementById('paperTradingForm');
+        const liveTradingResultsArea = document.getElementById('liveTradingResultsArea'); // New live trading results area
+        const liveSessionStatus = document.getElementById('liveSessionStatus');
+        const liveSessionId = document.getElementById('liveSessionId');
+        const liveCurrentPL = document.getElementById('liveCurrentPL');
+        const liveRecentTrades = document.getElementById('liveRecentTrades');
+        const liveStatusDisplay = document.getElementById('liveStatusDisplay');
+        const stopLiveTradingButton = document.getElementById('stopLiveTradingButton');
+
+
         if (paperTradingForm) {
-            paperTradingForm.addEventListener('submit', (e) => {
+            paperTradingForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                alert("Live Paper Trading form submitted.");
-                // ... (mock display logic similar to backtest if needed) ...
+                console.log("Live Paper Trading form submitted via JS.");
+
+                // Hide backtesting results if visible
+                resultsArea.classList.add('hidden');
+
+                // Display the live trading results area
+                liveTradingResultsArea.classList.remove('hidden');
+
+                liveSessionStatus.textContent = 'Starting...';
+                liveSessionId.textContent = 'Generating...';
+                liveCurrentPL.textContent = 'N/A';
+                liveRecentTrades.textContent = 'N/A';
+                liveStatusDisplay.innerHTML = '<p>Initiating live paper trading session...</p><div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-green-500 mx-auto my-4"></div>';
+                stopLiveTradingButton.classList.add('hidden'); // Hide stop button initially
+
+                const formData = new FormData(paperTradingForm);
+
+                // In a real application, you would send this to a backend endpoint
+                // that starts the live trading process and returns a session ID.
+                // For this example, we'll simulate a response.
+                try {
+                    // This is a conceptual fetch call. You would need to create a Flask endpoint
+                    // (e.g., /start-live-paper-trading) in your app.py to handle this.
+                    const response = await fetch('/start-live-paper-trading', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        let errorData = { detail: `Server error: ${response.status}. ${errorText}` };
+                        try {
+                            errorData = JSON.parse(errorText);
+                        } catch (e) { /* Ignore if not JSON */ }
+                        console.error("Server error response:", errorData);
+                        throw new Error(`HTTP error ${response.status}: ${errorData.error || errorData.detail || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log("Received data from live trading backend:", data);
+
+                    if (data.status === 'started' || data.status === 'success') {
+                        liveSessionStatus.textContent = 'Running';
+                        liveSessionId.textContent = data.session_id || 'LIVE-' + Date.now(); // Use actual ID or generate
+                        liveStatusDisplay.innerHTML = `<p class="text-green-400">Live Paper Trading Session Started! Session ID: ${liveSessionId.textContent}</p><p>Monitoring for updates...</p>`;
+                        stopLiveTradingButton.classList.remove('hidden');
+
+                        // Conceptual: In a real app, you'd set up a polling mechanism or WebSocket
+                        // to get continuous updates for liveCurrentPL, liveRecentTrades, etc.
+                        // For this example, we'll just set some mock data after a delay.
+                        setTimeout(() => {
+                            liveCurrentPL.textContent = '$+5.23'; // Mock data
+                            liveRecentTrades.textContent = '2 Buys, 1 Sell'; // Mock data
+                            liveStatusDisplay.innerHTML += '<p>Initial metrics loaded. Waiting for next update...</p>';
+                        }, 2000);
+
+                    } else if (data.error) {
+                        liveSessionStatus.textContent = 'Failed';
+                        liveStatusDisplay.innerHTML = `<p class="text-red-400">Error: ${data.error}</p><p>${data.details || ''}</p>`;
+                        stopLiveTradingButton.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error starting live paper trading:', error);
+                    liveSessionStatus.textContent = 'Failed to start';
+                    liveStatusDisplay.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}. Please check console.</p>`;
+                    stopLiveTradingButton.classList.add('hidden');
+                }
+            });
+        }
+
+        if (stopLiveTradingButton) {
+            stopLiveTradingButton.addEventListener('click', async () => {
+                liveSessionStatus.textContent = 'Stopping...';
+                liveStatusDisplay.innerHTML = '<p>Stopping live paper trading session...</p>';
+                stopLiveTradingButton.disabled = true;
+
+                try {
+                    // Conceptual: Send a request to your Flask backend to stop the session
+                    const response = await fetch('/stop-live-paper-trading', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId: liveSessionId.textContent })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        liveSessionStatus.textContent = data.status || 'Stopped';
+                        liveStatusDisplay.innerHTML = `<p class="text-blue-400">Live Paper Trading Session ${liveSessionId.textContent} stopped.</p>`;
+                    } else {
+                        throw new Error('Failed to stop session.');
+                    }
+                } catch (error) {
+                    console.error('Error stopping live paper trading:', error);
+                    liveStatusDisplay.innerHTML = `<p class="text-red-400">Error stopping session: ${error.message}</p>`;
+                } finally {
+                    stopLiveTradingButton.disabled = false;
+                    stopLiveTradingButton.classList.add('hidden'); // Hide after stopping
+                }
             });
         }
     </script>
