@@ -130,16 +130,15 @@
                     <div id="loadingPlaceholder" class="flex flex-col items-center justify-center min-h-[200px] text-gray-400">
                         <div class="w-20 h-20 border-4 border-dashed rounded-full animate-spin border-blue-500 mb-4"></div>
                         <p class="text-lg font-semibold">Running backtest, please wait...</p>
-                        <p class="text-sm mt-2">This may take 25-45 seconds.</p>
+                        <p class="text-sm mt-2">This may take 30 seconds.</p>
                     </div>
                     <div id="resultsContent" class="hidden">
                         <div id="equityCurvePlaceholder" class="bg-gray-700 min-h-[200px] rounded-md mb-6">
-                             <img src="https://placehold.co/800x400/1F2937/F59E0B?text=Simulated+Equity+Curve" alt="Simulated Equity Curve" class="mx-auto rounded-md w-full h-auto"/>
+                             <img id="equityCurveImage" src="" alt="Equity Curve" class="mx-auto rounded-md w-full h-auto"/>
                         </div>
                         <div class="text-gray-300 space-y-4">
-                            <p class="text-lg"><strong>Final Equity:</strong> <span id="finalEquityText" class="text-green-400 font-bold">$11,245.50</span></p>
-                            <p class="text-lg"><strong>Net P/L:</strong> <span id="netPLText" class="text-green-400 font-bold">$1,245.50 (12.46%)</span></p>
-                            <p class="text-lg"><strong>Total Trades:</strong> <span id="totalTradesText" class="font-bold">45</span></p>
+                            <p class="text-lg"><strong>Final Equity:</strong> <span id="finalEquityText" class="text-green-400 font-bold"></span></p>
+                            <p class="text-lg"><strong>Net P/L:</strong> <span id="netPLText" class="text-green-400 font-bold"></span></p>
                         </div>
                         <div class="pt-8 text-center">
                             <a href="/checkout" id="upgradeButton" class="cta-button inline-block text-white px-8 py-4 rounded-lg font-semibold text-xl shadow-xl">
@@ -167,33 +166,48 @@
             const loadingPlaceholder = document.getElementById('loadingPlaceholder');
             const resultsContent = document.getElementById('resultsContent');
             const upgradeButton = document.getElementById('upgradeButton');
+            const finalEquityText = document.getElementById('finalEquityText');
+            const netPLText = document.getElementById('netPLText');
+            const equityCurveImage = document.getElementById('equityCurveImage');
 
             if (demoForm) {
                 demoForm.addEventListener('submit', async function(event) {
                     event.preventDefault();
 
-                    // Show loading state
                     demoResultsArea.classList.remove('hidden');
                     loadingPlaceholder.classList.remove('hidden');
                     resultsContent.classList.add('hidden');
                     runDemoBacktestButton.disabled = true;
 
-                    // Simulate API call and delay
-                    console.log("Starting demo backtest simulation...");
-                    setTimeout(() => {
-                        // Hide loading and show results after simulated delay
+                    const formData = new FormData();
+                    formData.append('backtest_strategy_prompt', document.getElementById('demo_strategy_prompt').value);
+                    formData.append('starting_balance_usd', document.getElementById('demo_starting_balance').value);
+                    formData.append('trade_amount_btc', document.getElementById('demo_trade_amount').value);
+
+                    try {
+                        const response = await fetch('/guest-run-backtest', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+
+                        if (data.status === 'completed') {
+                            equityCurveImage.src = data.results.equity_curve_url;
+                            finalEquityText.textContent = `$${data.results.final_equity.toFixed(2)}`;
+                            const netPL = data.results.net_pl;
+                            netPLText.textContent = `${netPL >= 0 ? '+' : ''}$${netPL.toFixed(2)}`;
+                        }
+                    } catch (error) {
+                        console.error('Error running demo backtest:', error);
+                    } finally {
                         loadingPlaceholder.classList.add('hidden');
                         resultsContent.classList.remove('hidden');
-
-                        // Enable the button again
                         runDemoBacktestButton.disabled = false;
 
-                        // After a few seconds, redirect to the checkout page
                         setTimeout(() => {
                             window.location.href = upgradeButton.href;
-                        }, 5000); // Redirect after 5 seconds to give user time to see results
-
-                    }, Math.random() * (45000 - 25000) + 25000); // Simulate 25-45 second backtest
+                        }, 5000);
+                    }
                 });
             }
         });
