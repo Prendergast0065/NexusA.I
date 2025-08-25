@@ -361,9 +361,11 @@ def handle_run_backtest():
         try:
             openai_key = os.environ.get("OPENAI_API_KEY")
             strategy_prompt = request.form.get("backtest_strategy_prompt")
-            # Default to '7' if not provided or empty, then convert to int
-            num_days_str = request.form.get("backtest_days_csv", "7")
-            num_days = int(num_days_str) if num_days_str else 7
+            # Default to '1' if not provided or empty, then convert to int
+            num_days_str = request.form.get("backtest_days_csv", "1")
+            num_days = int(num_days_str) if num_days_str else 1
+            # Enforce a maximum of 3 days and a minimum of 1 day
+            num_days = max(1, min(num_days, 3))
 
             randomize_period_str = request.form.get(
                 "backtest_randomize_period_csv", "yes"
