@@ -121,7 +121,8 @@ def run_live_trading():
                     "usd_balance": trader.usdt_balance,
                     "btc_balance": trader.btc_balance,
                     "estimated_pl": trader.get_net_pl(current_price), # You'll need to implement this in SimulatedTrader
-                    "recent_activity_message": f"AI signaled {action}. Reason: {reasoning[:50]}...",
+                    "reason": reasoning,
+                    "message": f"AI signaled {action}. Reason: {reasoning[:50]}...",
                     "type": action.lower() # for log coloring
                 }
                 requests.post(FLASK_STATUS_ENDPOINT, json=report_data)

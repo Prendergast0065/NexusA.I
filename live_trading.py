@@ -110,7 +110,8 @@ def run_live_trading():
                 "usd_balance": trader.usdt_balance,
                 "btc_balance": trader.btc_balance,
                 "estimated_pl": trader.get_net_pl(price),
-                "message": f"AI signaled {action}.",
+                "reason": reasoning,
+                "message": f"AI signaled {action}. Reason: {reasoning}",
             }
             if FLASK_STATUS_ENDPOINT:
                 try:
