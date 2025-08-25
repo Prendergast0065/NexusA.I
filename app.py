@@ -85,8 +85,6 @@ latest_live_signal_status = {
 # Processes launched via /start-live-signal-generator tracked by session ID
 running_live_signal_processes = {}
 
-# Background thread handle for the dynamic leaderboard
-leaderboard_thread = None
 
 
 def hash_pw(password: str) -> str:
@@ -143,12 +141,8 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "harry.prendergast307@gmail.com")
 # --- Routes to serve your HTML pages ---
 @app.route("/")
 def home():
-    global leaderboard_thread
-    if leaderboard_thread is None or not leaderboard_thread.is_alive():
-        leaderboard_thread = threading.Thread(
-            target=update_leaderboard_in_background, daemon=True
-        )
-        leaderboard_thread.start()
+    thread = threading.Thread(target=update_leaderboard_in_background, daemon=True)
+    thread.start()
     return render_template("index.html")
 
 
@@ -677,42 +671,75 @@ def serve_job_result_file(job_id, filename):
     return send_from_directory(directory, filename)
 
 
-# --- Background updater for the leaderboard ---
-def update_leaderboard_in_background():
-    """Periodically adjust demo user statistics to simulate activity."""
-    while True:
-        with app.app_context():
-            demo_users = User.query.filter(User.total_backtests > 0).all()
-            for user in demo_users:
-                user.total_net_pl += random.uniform(-100.0, 300.0)
-                user.total_backtests += random.randint(0, 3)
-            db.session.commit()
-        time.sleep(30)
-
-
-# --- Utility to add sample users for the leaderboard demo ---
+# --- Function to add sample users for the leaderboard ---
 def add_sample_users_for_leaderboard():
     users_to_add = [
+        {"email": "leia.organa@trader.com", "net_pl": 2500.50, "backtests": 15},
         {"email": "luke.skywalker@trader.com", "net_pl": 1250.75, "backtests": 12},
         {"email": "darth.vader@trader.com", "net_pl": 890.30, "backtests": 8},
-        {"email": "leia.organa@trader.com", "net_pl": 2500.50, "backtests": 15},
         {"email": "han.solo@trader.com", "net_pl": 500.00, "backtests": 5},
         {"email": "chewbacca@trader.com", "net_pl": 120.90, "backtests": 3},
     ]
+    with app.app_context():
+        for user_data in users_to_add:
+            if not User.query.filter_by(email=user_data["email"]).first():
+                new_user = User(
+                    email=user_data["email"],
+                    pw_hash=hash_pw("password123"),
+                    is_paid=True,
+                    total_net_pl=user_data["net_pl"],
+                    total_backtests=user_data["backtests"],
+                )
+                db.session.add(new_user)
+                app.logger.info(f"Adding sample user: {new_user.email}")
+        db.session.commit()
+        app.logger.info("Sample users added for leaderboard demo.")
 
-    for user_data in users_to_add:
-        if not User.query.filter_by(email=user_data["email"]).first():
-            new_user = User(
-                email=user_data["email"],
-                pw_hash=hash_pw("password123"),  # mock password
-                is_paid=True,
-                total_net_pl=user_data["net_pl"],
-                total_backtests=user_data["backtests"],
+
+def update_leaderboard_in_background():
+    """Simulates daily performance changes for demo users."""
+    with app.app_context():
+        app.logger.info("Starting background leaderboard update thread...")
+        while True:
+            app.logger.info("Running daily leaderboard update simulation...")
+            all_users = User.query.all()
+            for user in all_users:
+                if "trader.com" in user.email:  # Only update our demo users
+                    # Simulate a random profit/loss with a slight positive bias
+                    change = random.uniform(-150, 250)
+                    user.total_net_pl = max(0, user.total_net_pl + change)
+                    user.total_backtests += random.randint(1, 3)
+
+            # Add a new user to the leaderboard every few cycles
+            if random.random() < 0.2:  # 20% chance of a new user
+                new_user_email = f"new.trader{random.randint(100, 999)}@trader.com"
+                if not User.query.filter_by(email=new_user_email).first():
+                    new_user = User(
+                        email=new_user_email,
+                        pw_hash=hash_pw("password123"),
+                        is_paid=True,
+                        total_net_pl=random.uniform(-50, 500),
+                        total_backtests=random.randint(1, 2),
+                    )
+                    db.session.add(new_user)
+                    app.logger.info(
+                        f"Adding new demo user to leaderboard: {new_user_email}"
+                    )
+
+            db.session.commit()
+            app.logger.info(
+                "Leaderboard update simulation complete. Sleeping for a while..."
             )
-            db.session.add(new_user)
-            app.logger.info(f"Adding sample user: {new_user.email}")
-    db.session.commit()
-    app.logger.info("Sample users added for leaderboard demo.")
+            # For a live environment, this would be a much longer sleep
+            time.sleep(60)  # Updates every 60 seconds for demonstration
+
+
+# --- Flask CLI command to add demo users ---
+@app.cli.command("add-demo-users")
+def add_demo_users_command():
+    """Adds a set of sample users to the database for the leaderboard."""
+    with app.app_context():
+        add_sample_users_for_leaderboard()
 
 
 if __name__ == "__main__":
@@ -723,11 +750,8 @@ if __name__ == "__main__":
         add_sample_users_for_leaderboard()
 
     # Start the background thread for updating the leaderboard
-    leaderboard_thread = threading.Thread(
-        target=update_leaderboard_in_background, daemon=True
-    )
-    leaderboard_thread.start()
+    thread = threading.Thread(target=update_leaderboard_in_background, daemon=True)
+    thread.start()
 
-    # Allow debug mode to be toggled via the FLASK_DEBUG environment variable
     debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
     app.run(debug=debug_mode)
