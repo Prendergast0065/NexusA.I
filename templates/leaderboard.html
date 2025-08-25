@@ -120,7 +120,7 @@
                         <td>
                             <span class="rank-badge">{{ loop.index }}</span>
                         </td>
-                        <td>{{ user.email }}</td>
+                        <td>{{ user.username or user.email }}</td>
                         <td class="{{ 'net-pl-positive' if user.total_net_pl > 0 else 'net-pl-negative' }}">
                             ${{ "%.2f"|format(user.total_net_pl) }}
                         </td>
