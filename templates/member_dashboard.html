@@ -74,6 +74,16 @@
             background-color: white; border-radius: 50%;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
+        .surprise-button {
+            background-color: transparent;
+            border: 1px solid #F59E0B;
+            color: #F59E0B;
+            transition: background-color 0.3s ease;
+        }
+        .surprise-button:hover {
+            background-color: #F59E0B;
+            color: #FFFFFF;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -171,7 +181,10 @@
                                     <label for="backtest_strategy_prompt" class="block text-sm font-medium mb-1">Custom AI Strategy Prompt</label>
                                     <a href="/prompt-guide" class="secondary-button text-xs px-2 py-1 rounded-md">How to?</a>
                                 </div>
-                                <textarea name="backtest_strategy_prompt" id="backtest_strategy_prompt" rows="8" placeholder="Define your AI's backtesting logic..." required></textarea>
+                                <div class="relative">
+                                    <textarea name="backtest_strategy_prompt" id="backtest_strategy_prompt" rows="8" placeholder="Define your AI's backtesting logic..." required></textarea>
+                                    <button type="button" id="surprisePromptButton" class="absolute bottom-2 right-2 secondary-button surprise-button text-xs px-2 py-1 rounded-md">Surprise Me!</button>
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -323,6 +336,28 @@
                 }
             });
         });
+
+        // Surprise Me Prompt functionality
+        const surprisePromptButton = document.getElementById('surprisePromptButton');
+        const backtestStrategyPrompt = document.getElementById('backtest_strategy_prompt');
+        const aggressivePrompt = `You are a highly aggressive, high-risk cryptocurrency scalping bot. Your sole purpose is to find and execute profitable short-term trades. You will prioritize maximizing profit over capital preservation. Do not default to HOLD unless there is no market movement at all. High volatility is an opportunity for profit, not a cause for caution.
+
+You will receive the latest 60 minutes of 1-minute OHLCV data for BTC/USDT, including 'open', 'high', 'low', 'close', 'volume', 'sma_30', 'sma_60', 'rsi', and 'atr'.
+
+**BUY Signal:** Issue a BUY if 'rsi' is below 55 and trending upwards OR if 'close' has crossed above 'sma_30'. Treat any increase in volatility (higher 'atr') as a signal to look for an entry.
+
+**SELL Signal:** Issue a SELL if 'rsi' is above 70 and trending downwards OR if 'close' has crossed below 'sma_30'. Treat any increase in volatility (higher 'atr') as a signal to look for an exit.
+
+**HOLD Signal:** Issue a HOLD only if there has been less than a 0.1% price change in the last 15 minutes. In all other market conditions, you must attempt to find a trading opportunity.
+
+Your output must strictly follow this format:
+ACTION CONFIDENCE% REASONING`;
+
+        if (surprisePromptButton) {
+            surprisePromptButton.addEventListener('click', () => {
+                backtestStrategyPrompt.value = aggressivePrompt;
+            });
+        }
 
         // JS for Backtesting Form Submission
         const backtestingForm = document.getElementById('backtestingForm');
@@ -605,7 +640,7 @@
                     }, 10000); // Update every 10 seconds
 
                 } catch (error) {
-                    console.error("Error starting AI Signal Generator:", error);
+                    console.error('Error starting AI Signal Generator:', error);
                     updateActivityLog(`Failed to start AI Signal Generator: ${error.message}`, 'error');
                     liveSignalDashboard.classList.add('hidden'); // Hide on error
                     stopSignalGeneratorButton.classList.add('hidden');
@@ -646,5 +681,3 @@
 
 </body>
 </html>
-
-
