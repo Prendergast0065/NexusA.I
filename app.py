@@ -102,6 +102,9 @@ class User(UserMixin, db.Model):
     pw_hash = db.Column(db.String(255), nullable=False)
     stripe_cus = db.Column(db.String(120))
     is_paid = db.Column(db.Boolean, default=False)
+    # Leaderboard tracking fields
+    total_net_pl = db.Column(db.Float, default=0.0)
+    total_backtests = db.Column(db.Integer, default=0)
 
 
 @login_manager.user_loader
@@ -302,6 +305,19 @@ def member_dashboard_page():
     return render_template("member_dashboard.html")
 
 
+# --- Leaderboard Page ---
+@app.route("/leaderboard")
+def leaderboard_page():
+    # Query top users with at least one backtest, ordered by net P&L
+    top_users = (
+        User.query.filter(User.total_backtests > 0)
+        .order_by(User.total_net_pl.desc())
+        .limit(10)
+        .all()
+    )
+    return render_template("leaderboard.html", users=top_users)
+
+
 @app.route("/guest-backtest")
 def guest_backtest_page():
     return render_template("guest_backtest.html")
@@ -462,6 +478,14 @@ def handle_run_backtest():
                     f"Backtest for job {job_id} failed: {backtest_results_data['error']}"
                 )
                 return jsonify({"error": backtest_results_data["error"]}), 500
+
+            # Update current user's stats for the leaderboard
+            current_user.total_net_pl += float(backtest_results_data.get("net_pl", 0))
+            current_user.total_backtests += 1
+            db.session.commit()
+            app.logger.info(
+                f"User {current_user.email} stats updated for leaderboard."
+            )
 
             app.logger.info(
                 f"Backtest for job {job_id} completed successfully. Results: {backtest_results_data}"
@@ -644,7 +668,38 @@ def serve_job_result_file(job_id, filename):
     return send_from_directory(directory, filename)
 
 
+# --- Utility to add sample users for the leaderboard demo ---
+def add_sample_users_for_leaderboard():
+    users_to_add = [
+        {"email": "luke.skywalker@trader.com", "net_pl": 1250.75, "backtests": 12},
+        {"email": "darth.vader@trader.com", "net_pl": 890.30, "backtests": 8},
+        {"email": "leia.organa@trader.com", "net_pl": 2500.50, "backtests": 15},
+        {"email": "han.solo@trader.com", "net_pl": 500.00, "backtests": 5},
+        {"email": "chewbacca@trader.com", "net_pl": 120.90, "backtests": 3},
+    ]
+
+    for user_data in users_to_add:
+        if not User.query.filter_by(email=user_data["email"]).first():
+            new_user = User(
+                email=user_data["email"],
+                pw_hash=hash_pw("password123"),  # mock password
+                is_paid=True,
+                total_net_pl=user_data["net_pl"],
+                total_backtests=user_data["backtests"],
+            )
+            db.session.add(new_user)
+            app.logger.info(f"Adding sample user: {new_user.email}")
+    db.session.commit()
+    app.logger.info("Sample users added for leaderboard demo.")
+
+
 if __name__ == "__main__":
+    with app.app_context():
+        from flask_migrate import upgrade
+
+        upgrade()
+        add_sample_users_for_leaderboard()
+
     # Allow debug mode to be toggled via the FLASK_DEBUG environment variable
     debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
     app.run(debug=debug_mode)
