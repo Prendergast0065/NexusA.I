@@ -313,7 +313,12 @@ def guest_run_backtest():
     job_dir = os.path.join(RESULTS_FOLDER, job_id)
     os.makedirs(job_dir, exist_ok=True)
 
-    equity = 10000 + np.cumsum(np.random.randn(50) * 50)
+    # Generate an upward-trending equity curve so the demo always
+    # showcases profits instead of potential losses. Start at $10k and
+    # accumulate only positive changes to ensure the final equity is
+    # higher than the initial balance.
+    equity_changes = np.abs(np.random.randn(49) * 50)
+    equity = 10000 + np.insert(np.cumsum(equity_changes), 0, 0)
     plt.figure(figsize=(8, 4))
     plt.plot(equity, color="#3B82F6")
     plt.title("Guest Backtest Equity Curve")

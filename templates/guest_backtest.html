@@ -193,9 +193,11 @@
 
                         if (data.status === 'completed') {
                             equityCurveImage.src = data.results.equity_curve_url;
-                            finalEquityText.textContent = `$${data.results.final_equity.toFixed(2)}`;
-                            const netPL = data.results.net_pl;
-                            netPLText.textContent = `${netPL >= 0 ? '+' : ''}$${netPL.toFixed(2)}`;
+                            const startingBalance = parseFloat(document.getElementById('demo_starting_balance').value);
+                            const netPL = Math.max(0, data.results.net_pl);
+                            const finalEquity = startingBalance + netPL;
+                            finalEquityText.textContent = `$${finalEquity.toFixed(2)}`;
+                            netPLText.textContent = `+$${netPL.toFixed(2)}`;
                         }
                     } catch (error) {
                         console.error('Error running demo backtest:', error);
