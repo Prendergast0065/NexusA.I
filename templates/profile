@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTrade AI Lab - My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c152a;
+            color: #e2e8f0;
+        }
+        .content-section {
+            background-color: #1a243d;
+            border: 1px solid #374151;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 2.25rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.75rem;
+        }
+        .cta-button {
+            background-color: #4a69bd;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #3b5998;
+            transform: scale(1.05);
+        }
+        .secondary-button {
+            background-color: transparent;
+            border: 2px solid #6c7a89;
+            color: #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .secondary-button:hover {
+            background-color: #4a69bd;
+            color: #ffffff;
+            border-color: #4a69bd;
+        }
+        input[type="text"], input[type="email"] {
+            background-color: #2d3b55;
+            border: 1px solid #4a69bd;
+            color: #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+        }
+        input[type="checkbox"] {
+            width: 1.5rem;
+            height: 1.5rem;
+            accent-color: #4a69bd;
+        }
+        .form-label {
+            color: #d1d5db;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <nav class="bg-black/40 backdrop-blur-md fixed w-full z-50 top-0 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-white">NexusTrade <span class="text-indigo-400">AI Lab</span></a>
+                    <span class="ml-4 text-sm text-gray-400 hidden sm:inline">- My Profile</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/dashboard" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="/leaderboard" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Leaderboard</a>
+                        <a href="/profile" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">My Profile</a>
+                        <a href="/logout" id="logoutLink" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow py-24 sm:py-32">
+        <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 content-section p-6 sm:p-8 rounded-xl shadow-2xl">
+            <h1>My Profile</h1>
+            <p class="mt-4 text-gray-400">Manage your account information and leaderboard settings.</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mt-4 p-3 rounded-md text-sm {% if category == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('profile_page') }}" class="mt-6 space-y-6">
+                <div>
+                    <label for="username" class="form-label block mb-2">Username</label>
+                    <input type="text" id="username" name="username" value="{{ current_user.username }}" required class="block w-full">
+                </div>
+                <div>
+                    <label for="email" class="form-label block mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" readonly class="block w-full cursor-not-allowed bg-gray-600">
+                </div>
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="show_on_leaderboard" name="show_on_leaderboard" {% if current_user.show_on_leaderboard %}checked{% endif %}>
+                    <label for="show_on_leaderboard" class="form-label">Show my performance on the public leaderboard</label>
+                </div>
+                <div>
+                    <button type="submit" class="w-full cta-button text-white px-6 py-3 rounded-lg font-semibold shadow-md">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-black/40 border-t border-gray-700 mt-auto">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400">&copy; 2025 NexusTrade AI Lab. All rights reserved.</p>
+        </div>
+    </footer>
+    
+</body>
+</html>
