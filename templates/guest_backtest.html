@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guest Backtesting Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="max-w-xl mx-auto px-4 py-10 text-center">
+        <h1 class="text-3xl font-bold mb-6">Guest Backtesting Demo</h1>
+        <p class="mb-4">Run a quick backtest to see hypothetical performance.</p>
+        <button id="runBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Run Backtest</button>
+        <div id="result" class="mt-6 text-2xl font-semibold"></div>
+        <a href="/" class="block mt-10 text-blue-400 hover:underline">Back to Home</a>
+    </div>
+
+    <script>
+        document.getElementById('runBtn').addEventListener('click', async () => {
+            const res = await fetch('/guest-run-backtest', { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('result').textContent = `Profit: ${data.profit_percent}%`;
+        });
+    </script>
+</body>
+</html>
+

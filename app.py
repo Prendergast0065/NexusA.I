@@ -16,6 +16,7 @@ import stripe  # Stripe payment processing
 import subprocess  # For launching background processes
 import threading  # For basic process tracking
 import json
+import random
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -294,6 +295,17 @@ def member_dashboard_page():
     if not current_user.is_paid:
         return redirect(url_for("checkout_page"))
     return render_template("member_dashboard.html")
+
+
+@app.route("/guest-backtest")
+def guest_backtest_page():
+    return render_template("guest_backtest.html")
+
+
+@app.route("/guest-run-backtest", methods=["POST"])
+def guest_run_backtest():
+    profit = round(random.uniform(5, 34), 2)
+    return jsonify({"profit_percent": profit})
 
 
 # --- API Endpoint for Backtesting ---
