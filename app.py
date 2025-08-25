@@ -108,6 +108,8 @@ class User(UserMixin, db.Model):
     # Leaderboard tracking fields
     total_net_pl = db.Column(db.Float, default=0.0)
     total_backtests = db.Column(db.Integer, default=0)
+    username = db.Column(db.String(80), unique=True, nullable=True)
+    show_on_leaderboard = db.Column(db.Boolean, default=True)
 
 
 @login_manager.user_loader
@@ -159,8 +161,17 @@ def signup_page():
             return render_template("signup.html", message="User already exists")
         try:
             customer = stripe.Customer.create(email=email)
+            base_username = email.split("@")[0]
+            username = base_username
+            counter = 1
+            while User.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
             user = User(
-                email=email, pw_hash=hash_pw(password), stripe_cus=customer["id"]
+                email=email,
+                pw_hash=hash_pw(password),
+                stripe_cus=customer["id"],
+                username=username,
             )
             db.session.add(user)
             db.session.commit()
@@ -190,6 +201,25 @@ def login_page():
 def logout_page():
     logout_user()
     return redirect(url_for("home"))
+
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile_page():
+    if request.method == "POST":
+        username = request.form.get("username")
+        show = True if request.form.get("show_on_leaderboard") else False
+        if username:
+            existing = User.query.filter_by(username=username).first()
+            if existing and existing.id != current_user.id:
+                flash("Username already taken", "error")
+                return redirect(url_for("profile_page"))
+            current_user.username = username
+        current_user.show_on_leaderboard = show
+        db.session.commit()
+        flash("Profile updated", "success")
+        return redirect(url_for("profile_page"))
+    return render_template("profile.html")
 
 
 @app.route("/checkout")
@@ -315,7 +345,10 @@ def member_dashboard_page():
 def leaderboard_page():
     # Query top users with at least one backtest, ordered by net P&L
     top_users = (
-        User.query.filter(User.total_backtests > 0)
+        User.query.filter(
+            User.total_backtests > 0,
+            User.show_on_leaderboard == True,
+        )
         .order_by(User.total_net_pl.desc())
         .limit(10)
         .all()
@@ -691,6 +724,8 @@ def add_sample_users_for_leaderboard():
                     is_paid=True,
                     total_net_pl=user_data["net_pl"],
                     total_backtests=user_data["backtests"],
+                    username=user_data["email"].split("@")[0],
+                    show_on_leaderboard=True,
                 )
                 db.session.add(new_user)
                 app.logger.info(f"Adding sample user: {new_user.email}")
@@ -711,6 +746,10 @@ def update_leaderboard_in_background():
                     change = random.uniform(-150, 250)
                     user.total_net_pl = max(0, user.total_net_pl + change)
                     user.total_backtests += random.randint(1, 3)
+                    if not user.username:
+                        user.username = user.email.split("@")[0]
+                    if user.show_on_leaderboard is None:
+                        user.show_on_leaderboard = True
 
             # Add a new user to the leaderboard every few cycles
             if random.random() < 0.2:  # 20% chance of a new user
@@ -722,6 +761,8 @@ def update_leaderboard_in_background():
                         is_paid=True,
                         total_net_pl=random.uniform(-50, 500),
                         total_backtests=random.randint(1, 2),
+                        username=new_user_email.split("@")[0],
+                        show_on_leaderboard=True,
                     )
                     db.session.add(new_user)
                     app.logger.info(

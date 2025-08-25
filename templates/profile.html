@@ -101,7 +101,7 @@
             <form method="POST" action="{{ url_for('profile_page') }}" class="mt-6 space-y-6">
                 <div>
                     <label for="username" class="form-label block mb-2">Username</label>
-                    <input type="text" id="username" name="username" value="{{ current_user.username }}" required class="block w-full">
+                    <input type="text" id="username" name="username" value="{{ current_user.username or '' }}" required class="block w-full">
                 </div>
                 <div>
                     <label for="email" class="form-label block mb-2">Email Address</label>
