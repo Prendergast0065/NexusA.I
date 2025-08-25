@@ -9,17 +9,40 @@
 <body class="bg-gray-900 text-gray-100">
     <div class="max-w-xl mx-auto px-4 py-10 text-center">
         <h1 class="text-3xl font-bold mb-6">Guest Backtesting Demo</h1>
-        <p class="mb-4">Run a quick backtest to see hypothetical performance.</p>
-        <button id="runBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Run Backtest</button>
-        <div id="result" class="mt-6 text-2xl font-semibold"></div>
+        <p class="mb-4">Enter a strategy prompt or use the default to see a sample backtest.</p>
+        <textarea id="promptInput" class="w-full mb-4 p-2 rounded bg-gray-800 border border-gray-700" rows="4">Test strategy prompt</textarea>
+        <button id="runBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold">TRY NOW</button>
+        <div id="loading" class="mt-6 text-xl font-semibold hidden">Processing... please wait (~30s)</div>
+        <div id="result" class="mt-6 hidden">
+            <img id="equityCurve" class="mx-auto mb-4" src="" alt="Equity Curve">
+            <p id="pl" class="text-2xl font-semibold"></p>
+            <a id="buySubBtn" href="/signup" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-6 inline-block">Buy subscription now to go live</a>
+        </div>
         <a href="/" class="block mt-10 text-blue-400 hover:underline">Back to Home</a>
     </div>
 
     <script>
         document.getElementById('runBtn').addEventListener('click', async () => {
-            const res = await fetch('/guest-run-backtest', { method: 'POST' });
+            const prompt = document.getElementById('promptInput').value;
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const pl = document.getElementById('pl');
+            const equityCurve = document.getElementById('equityCurve');
+            result.classList.add('hidden');
+            loading.classList.remove('hidden');
+            const formData = new FormData();
+            formData.append('backtest_strategy_prompt', prompt);
+            const res = await fetch('/guest-run-backtest', { method: 'POST', body: formData });
             const data = await res.json();
-            document.getElementById('result').textContent = `Profit: ${data.profit_percent}%`;
+            loading.classList.add('hidden');
+            if (data.status === 'completed') {
+                equityCurve.src = data.results.equity_curve_url;
+                pl.textContent = `Net P/L: $${data.results.net_pl.toFixed(2)}`;
+                result.classList.remove('hidden');
+            } else {
+                pl.textContent = data.error || 'Error running backtest.';
+                result.classList.remove('hidden');
+            }
         });
     </script>
 </body>
