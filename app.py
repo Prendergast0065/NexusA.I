@@ -18,6 +18,8 @@ import threading  # For basic process tracking
 import json
 import random
 import time
+from io import StringIO
+from contextlib import redirect_stderr
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -744,9 +746,27 @@ def add_demo_users_command():
 
 if __name__ == "__main__":
     with app.app_context():
-        from flask_migrate import upgrade
+        # Capture stderr to check for specific error messages
+        f = StringIO()
+        with redirect_stderr(f):
+            try:
+                from flask_migrate import upgrade
+                upgrade()
+            except SystemExit:
+                if "Can't locate revision identified by" in f.getvalue():
+                    app.logger.warning(
+                        "Migration history mismatch detected. Stamping database to head."
+                    )
+                    # Run stamp head if the specific migration error is detected
+                    from flask_migrate import stamp
+                    stamp()
+                    app.logger.info(
+                        "Database migration history stamped to head. Re-running upgrade."
+                    )
+                    upgrade()
+                else:
+                    raise  # Re-raise the exception if it's not the specific one we're handling
 
-        upgrade()
         add_sample_users_for_leaderboard()
 
     # Start the background thread for updating the leaderboard
