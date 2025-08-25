@@ -85,6 +85,9 @@ latest_live_signal_status = {
 # Processes launched via /start-live-signal-generator tracked by session ID
 running_live_signal_processes = {}
 
+# Background thread handle for the dynamic leaderboard
+leaderboard_thread = None
+
 
 def hash_pw(password: str) -> str:
     """Hash a plaintext password using bcrypt."""
@@ -140,6 +143,12 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "harry.prendergast307@gmail.com")
 # --- Routes to serve your HTML pages ---
 @app.route("/")
 def home():
+    global leaderboard_thread
+    if leaderboard_thread is None or not leaderboard_thread.is_alive():
+        leaderboard_thread = threading.Thread(
+            target=update_leaderboard_in_background, daemon=True
+        )
+        leaderboard_thread.start()
     return render_template("index.html")
 
 
@@ -668,6 +677,19 @@ def serve_job_result_file(job_id, filename):
     return send_from_directory(directory, filename)
 
 
+# --- Background updater for the leaderboard ---
+def update_leaderboard_in_background():
+    """Periodically adjust demo user statistics to simulate activity."""
+    while True:
+        with app.app_context():
+            demo_users = User.query.filter(User.total_backtests > 0).all()
+            for user in demo_users:
+                user.total_net_pl += random.uniform(-100.0, 300.0)
+                user.total_backtests += random.randint(0, 3)
+            db.session.commit()
+        time.sleep(30)
+
+
 # --- Utility to add sample users for the leaderboard demo ---
 def add_sample_users_for_leaderboard():
     users_to_add = [
@@ -699,6 +721,12 @@ if __name__ == "__main__":
 
         upgrade()
         add_sample_users_for_leaderboard()
+
+    # Start the background thread for updating the leaderboard
+    leaderboard_thread = threading.Thread(
+        target=update_leaderboard_in_background, daemon=True
+    )
+    leaderboard_thread.start()
 
     # Allow debug mode to be toggled via the FLASK_DEBUG environment variable
     debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
