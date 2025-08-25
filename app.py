@@ -17,6 +17,10 @@ import subprocess  # For launching background processes
 import threading  # For basic process tracking
 import json
 import random
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -304,8 +308,39 @@ def guest_backtest_page():
 
 @app.route("/guest-run-backtest", methods=["POST"])
 def guest_run_backtest():
-    profit = round(random.uniform(5, 34), 2)
-    return jsonify({"profit_percent": profit})
+    prompt = request.form.get("backtest_strategy_prompt") or "Test strategy prompt"
+    job_id = str(uuid.uuid4())
+    job_dir = os.path.join(RESULTS_FOLDER, job_id)
+    os.makedirs(job_dir, exist_ok=True)
+
+    equity = 10000 + np.cumsum(np.random.randn(50) * 50)
+    plt.figure(figsize=(8, 4))
+    plt.plot(equity, color="#3B82F6")
+    plt.title("Guest Backtest Equity Curve")
+    plt.xlabel("Step")
+    plt.ylabel("Portfolio Value (USD)")
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    equity_curve_path = os.path.join(job_dir, "equity_curve.png")
+    plt.savefig(equity_curve_path)
+    plt.close()
+
+    final_equity = float(equity[-1])
+    net_pl = final_equity - equity[0]
+
+    time.sleep(30)
+
+    return jsonify(
+        {
+            "status": "completed",
+            "job_id": job_id,
+            "results": {
+                "equity_curve_url": f"/static/results/{job_id}/equity_curve.png",
+                "final_equity": final_equity,
+                "net_pl": net_pl,
+            },
+        }
+    )
 
 
 # --- API Endpoint for Backtesting ---
