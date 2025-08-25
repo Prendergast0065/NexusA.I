@@ -77,6 +77,7 @@ latest_live_signal_status = {
     "usd_balance": 0.0,
     "btc_balance": 0.0,
     "estimated_pl": 0.0,
+    "reason": "",
     "message": "AI Signal Generator is not active.",
     "type": "info",
 }
@@ -508,6 +509,7 @@ def start_live_signal_generator():
             "usd_balance": float(initial_usd_balance),
             "btc_balance": 0.0,
             "estimated_pl": 0.0,
+            "reason": "",
             "message": "AI Signal Generator starting...",
             "type": "info",
             "session_id": session_id,

@@ -534,7 +534,8 @@
                 const signal = data.signal || 'HOLD';
                 const usd_balance = data.usd_balance !== undefined ? data.usd_balance : currentSimulatedUSD;
                 const btc_balance = data.btc_balance !== undefined ? data.btc_balance : currentSimulatedBTC;
-                const message = data.message || `AI signaled ${signal}.`;
+                const reason = data.reason || '';
+                const message = data.message || `AI signaled ${signal}.${reason ? ` Reason: ${reason}` : ''}`;
 
                 aiSignal.textContent = signal;
                 aiSignal.className = 'signal-text'; // Reset classes
