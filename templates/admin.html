@@ -17,6 +17,9 @@
 <body class="min-h-screen p-8">
     <h1 class="text-2xl font-semibold mb-4">Admin Dashboard</h1>
 
+    <h2 class="text-xl font-semibold mb-2">Site Statistics</h2>
+    <p class="mb-8">Unique device views: {{ unique_views }}</p>
+
     <h2 class="text-xl font-semibold mb-2">Add User</h2>
     <form method="POST" class="mb-8">
         <input type="hidden" name="action" value="add_user">
