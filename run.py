@@ -2,7 +2,12 @@ import os
 import sys
 from io import StringIO
 from contextlib import redirect_stderr
-from app import app, add_sample_users_for_leaderboard, update_leaderboard_in_background
+from app import (
+    app,
+    add_sample_users_for_leaderboard,
+    ensure_admin_user,
+    update_leaderboard_in_background,
+)
 import threading
 
 def run_migrations_and_server():
@@ -36,6 +41,9 @@ def run_migrations_and_server():
                     print(error_output)
                     sys.exit(1)
     
+    print("Ensuring admin user exists...")
+    ensure_admin_user()
+
     # Add demo users on every startup for a robust demo experience
     print("Adding sample users for leaderboard...")
     add_sample_users_for_leaderboard()

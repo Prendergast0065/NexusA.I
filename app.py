@@ -142,6 +142,31 @@ STRIPE_PRICING_TABLE_ID = os.environ.get("STRIPE_PRICING_TABLE_ID", "")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "harry.prendergast307@gmail.com")
 
 
+def ensure_admin_user() -> None:
+    """Ensure an admin user exists with access to the /users page."""
+    with app.app_context():
+        if User.query.filter_by(email=ADMIN_EMAIL).first():
+            return
+
+        base_username = ADMIN_EMAIL.split("@")[0]
+        username = base_username
+        counter = 1
+        while User.query.filter_by(username=username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        admin_user = User(
+            email=ADMIN_EMAIL,
+            pw_hash=hash_pw("Pindar0065"),
+            is_paid=True,
+            username=username,
+            show_on_leaderboard=False,
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+        app.logger.info(f"Created admin user {ADMIN_EMAIL}")
+
+
 # --- Routes to serve your HTML pages ---
 @app.route("/")
 def home():
