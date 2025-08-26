@@ -2,7 +2,6 @@ flask
 flask-login
 flask-sqlalchemy
 flask-migrate
-passlib[bcrypt]
 python-dotenv
 stripe
 openai>=1.14.0

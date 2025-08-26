@@ -33,8 +33,8 @@ from flask_login import (
     current_user,
 )
 from flask_migrate import Migrate
-from passlib.hash import bcrypt
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import (
@@ -52,13 +52,13 @@ logging.basicConfig(
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24).hex())
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
 
 # prefer DATABASE_URL if it’s set; otherwise write/read the SQLite file on the disk
-data_dir = os.getenv("DATA_DIR", "/data")  # defined in render.yaml
-sqlite_path = f"sqlite:///{data_dir}/app.db"
-
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", sqlite_path)
+DATA_DIR = os.environ.get("DATA_DIR", "/data")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", f"sqlite:///{os.path.join(DATA_DIR, 'app.db')}"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -90,13 +90,17 @@ running_live_signal_processes = {}
 
 
 def hash_pw(password: str) -> str:
-    """Hash a plaintext password using bcrypt."""
-    return bcrypt.hash(password)
+    # Werkzeug defaults to scrypt on modern versions (also supports pbkdf2, argon2 if installed)
+    return generate_password_hash(password)
 
 
 def verify_pw(password: str, pw_hash: str) -> bool:
-    """Verify a plaintext password against a stored hash."""
-    return bcrypt.verify(password, pw_hash)
+    if not pw_hash:
+        return False
+    try:
+        return check_password_hash(pw_hash, password)
+    except Exception:
+        return False
 
 
 class User(UserMixin, db.Model):
@@ -170,8 +174,6 @@ def ensure_admin_user() -> None:
 # --- Routes to serve your HTML pages ---
 @app.route("/")
 def home():
-    thread = threading.Thread(target=update_leaderboard_in_background, daemon=True)
-    thread.start()
     return render_template("index.html")
 
 
@@ -413,7 +415,7 @@ def guest_run_backtest():
     final_equity = float(equity[-1])
     net_pl = final_equity - equity[0]
 
-    time.sleep(30)
+    time.sleep(int(os.environ.get("DEMO_SLEEP_SECS", "3")))
 
     return jsonify(
         {
@@ -761,7 +763,6 @@ def add_sample_users_for_leaderboard():
 def update_leaderboard_in_background():
     """Simulates daily performance changes for demo users."""
     with app.app_context():
-        app.logger.info("Starting background leaderboard update thread...")
         while True:
             app.logger.info("Running daily leaderboard update simulation...")
             all_users = User.query.all()
@@ -798,8 +799,28 @@ def update_leaderboard_in_background():
             app.logger.info(
                 "Leaderboard update simulation complete. Sleeping for a while..."
             )
-            # For a live environment, this would be a much longer sleep
-            time.sleep(60)  # Updates every 60 seconds for demonstration
+            time.sleep(LEADERBOARD_SLEEP_SECS)
+
+
+LEADERBOARD_SLEEP_SECS = int(os.environ.get("LEADERBOARD_SLEEP_SECS", "300"))
+
+leaderboard_thread = None
+
+
+def _start_leaderboard_once():
+    global leaderboard_thread
+    if leaderboard_thread is None or not leaderboard_thread.is_alive():
+        app.logger.info("Starting background leaderboard update thread...")
+        leaderboard_thread = threading.Thread(
+            target=update_leaderboard_in_background, daemon=True
+        )
+        leaderboard_thread.start()
+
+
+if hasattr(app, "before_first_request"):
+    app.before_first_request(_start_leaderboard_once)
+else:
+    app.before_request(_start_leaderboard_once)
 
 
 # --- Flask CLI command to add demo users ---
@@ -834,10 +855,6 @@ if __name__ == "__main__":
                     raise  # Re-raise the exception if it's not the specific one we're handling
 
         add_sample_users_for_leaderboard()
-
-    # Start the background thread for updating the leaderboard
-    thread = threading.Thread(target=update_leaderboard_in_background, daemon=True)
-    thread.start()
 
     debug_mode = os.environ.get("FLASK_DEBUG", "1") == "1"
     app.run(debug=debug_mode)
