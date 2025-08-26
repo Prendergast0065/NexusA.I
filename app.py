@@ -10,6 +10,9 @@ from flask import (
     abort,
 )
 import os
+import click
+from flask.cli import with_appcontext
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid  # For generating unique job IDs
 import logging  # For logging within Flask app
 import stripe  # Stripe payment processing
@@ -34,7 +37,6 @@ from flask_login import (
 )
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash, check_password_hash
 
 # --- Import your actual backtesting logic ---
 from my_backtester_logic import (
@@ -52,14 +54,15 @@ logging.basicConfig(
 load_dotenv()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-change-me')
 
 # prefer DATABASE_URL if it’s set; otherwise write/read the SQLite file on the disk
-DATA_DIR = os.environ.get("DATA_DIR", "/data")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", f"sqlite:///{os.path.join(DATA_DIR, 'app.db')}"
+DATA_DIR = os.environ.get('DATA_DIR', '/data')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    f"sqlite:///{os.path.join(DATA_DIR, 'app.db')}"
 )
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -90,7 +93,7 @@ running_live_signal_processes = {}
 
 
 def hash_pw(password: str) -> str:
-    # Werkzeug defaults to scrypt on modern versions (also supports pbkdf2, argon2 if installed)
+    # Werkzeug default (modern versions use scrypt; also verifies pbkdf2 and others)
     return generate_password_hash(password)
 
 
@@ -799,14 +802,15 @@ def update_leaderboard_in_background():
             app.logger.info(
                 "Leaderboard update simulation complete. Sleeping for a while..."
             )
-            time.sleep(LEADERBOARD_SLEEP_SECS)
-
-
-LEADERBOARD_SLEEP_SECS = int(os.environ.get("LEADERBOARD_SLEEP_SECS", "300"))
+            time.sleep(int(os.environ.get("LEADERBOARD_SLEEP_SECS", "300")))
 
 leaderboard_thread = None
 
+if not hasattr(app, "before_first_request"):
+    app.before_first_request = app.before_request  # type: ignore[attr-defined]
 
+
+@app.before_first_request
 def _start_leaderboard_once():
     global leaderboard_thread
     if leaderboard_thread is None or not leaderboard_thread.is_alive():
@@ -817,10 +821,62 @@ def _start_leaderboard_once():
         leaderboard_thread.start()
 
 
-if hasattr(app, "before_first_request"):
-    app.before_first_request(_start_leaderboard_once)
-else:
-    app.before_request(_start_leaderboard_once)
+# === User management CLI (flask user ...) ===
+@app.cli.group()
+def user():
+    """User management commands."""
+    pass
+
+
+@user.command("add")
+@click.argument("email")
+@click.argument("password")
+@click.option("--username", default=None, help="Display name; defaults to email prefix.")
+@click.option("--paid/--no-paid", default=True, help="Mark as paid or not.")
+@click.option("--show/--no-show", default=True, help="Show on leaderboard or hide.")
+@click.option("--stripe", default=None, help="Stripe customer id.")
+@with_appcontext
+def user_add(email, password, username, paid, show, stripe):
+    """Create or update a user."""
+    u = User.query.filter_by(email=email).first()
+    if u is None:
+        u = User(email=email)
+        db.session.add(u)
+    if not username:
+        username = email.split("@")[0]
+    u.pw_hash = generate_password_hash(password)
+    u.username = username
+    u.is_paid = bool(paid)
+    u.show_on_leaderboard = bool(show)
+    u.stripe_cus = stripe
+    db.session.commit()
+    click.echo(f"OK id={u.id} email={u.email} paid={u.is_paid} show={u.show_on_leaderboard}")
+
+
+@user.command("show")
+@click.argument("email")
+@with_appcontext
+def user_show(email):
+    """Show a user's key fields."""
+    u = User.query.filter_by(email=email).first()
+    if not u:
+        click.echo("Not found"); return
+    click.echo(f"id={u.id} email={u.email} paid={u.is_paid} user={u.username} "
+               f"stripe={u.stripe_cus} show={u.show_on_leaderboard}")
+
+
+@user.command("passwd")
+@click.argument("email")
+@click.argument("password")
+@with_appcontext
+def user_passwd(email, password):
+    """Reset a user's password only."""
+    u = User.query.filter_by(email=email).first()
+    if not u:
+        click.echo("Not found"); return
+    u.pw_hash = generate_password_hash(password)
+    db.session.commit()
+    click.echo("Password updated.")
 
 
 # --- Flask CLI command to add demo users ---
