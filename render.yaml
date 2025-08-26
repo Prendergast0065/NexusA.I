@@ -4,9 +4,10 @@ services:
     runtime: python        # “env: python” → “runtime:” in new spec
     buildCommand: |
       pip install -r requirements.txt
+    preDeployCommand: |
+      FLASK_APP=app.py flask db upgrade
     startCommand: |
-      flask db upgrade || (flask db stamp head && flask db upgrade)
-      gunicorn app:app --timeout 120 --bind 0.0.0.0:$PORT --workers 2
+      gunicorn app:app --timeout 300 --bind 0.0.0.0:$PORT --workers 2
     disk:                  # ← add this block
       name: data           # arbitrary label
       mountPath: /data     # absolute, non-root path
@@ -15,3 +16,5 @@ services:
     envVars:
       - key: DATA_DIR      # optional; lets app find the disk path
         value: /data
+      - key: SECRET_KEY
+        generateValue: true
