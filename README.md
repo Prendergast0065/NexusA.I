@@ -53,11 +53,15 @@ During local development you can use `http://127.0.0.1:5000` in place of `https:
 
 A simple `render.yaml` is included for deployment to Render. Adjust the environment variables there as needed.
 
-## Viewing Users
+## Admin Dashboard
 
-The `/users` page lists all registered accounts, showing each user's ID, email
-and payment status. Access to this page is restricted to the address specified
-by `ADMIN_EMAIL`.
+The `/admin` page is restricted to the address specified by `ADMIN_EMAIL`
+(default `harry.prendergast307@gmail.com`). From this page the administrator
+can add or remove users and edit leaderboard statistics such as total P&L,
+number of backtests, and whether a user appears on the public leaderboard.
+
+The simpler `/users` page still lists all registered accounts and remains
+accessible only to the admin as well.
 
 ## Live Trading (Experimental)
 
