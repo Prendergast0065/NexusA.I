@@ -119,6 +119,16 @@ class User(UserMixin, db.Model):
     show_on_leaderboard = db.Column(db.Boolean, default=True)
 
 
+class PageView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=False)
+    user_agent = db.Column(db.String(255), nullable=False)
+    first_seen = db.Column(db.DateTime, server_default=db.func.now())
+    __table_args__ = (
+        db.UniqueConstraint("ip_address", "user_agent", name="uniq_page_view"),
+    )
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -174,9 +184,20 @@ def ensure_admin_user() -> None:
         app.logger.info(f"Created admin user {ADMIN_EMAIL}")
 
 
+def track_page_view() -> None:
+    """Record a unique page view based on IP address and user agent."""
+    ip = request.remote_addr or "unknown"
+    ua = (request.user_agent.string or "unknown")[:255]
+    exists = PageView.query.filter_by(ip_address=ip, user_agent=ua).first()
+    if not exists:
+        db.session.add(PageView(ip_address=ip, user_agent=ua))
+        db.session.commit()
+
+
 # --- Routes to serve your HTML pages ---
 @app.route("/")
 def home():
+    track_page_view()
     return render_template("index.html")
 
 
@@ -423,7 +444,8 @@ def admin_page():
             return redirect(url_for("admin_page"))
 
     users = User.query.order_by(User.id).all()
-    return render_template("admin.html", users=users)
+    unique_views = PageView.query.count()
+    return render_template("admin.html", users=users, unique_views=unique_views)
 
 
 @app.route("/dashboard")
