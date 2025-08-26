@@ -803,11 +803,10 @@ def serve_job_result_file(job_id, filename):
 # --- Function to add sample users for the leaderboard ---
 def add_sample_users_for_leaderboard():
     users_to_add = [
-        {"email": "leia.organa@trader.com", "net_pl": 2500.50, "backtests": 15},
-        {"email": "luke.skywalker@trader.com", "net_pl": 1250.75, "backtests": 12},
-        {"email": "darth.vader@trader.com", "net_pl": 890.30, "backtests": 8},
-        {"email": "han.solo@trader.com", "net_pl": 500.00, "backtests": 5},
-        {"email": "chewbacca@trader.com", "net_pl": 120.90, "backtests": 3},
+        {"email": "mikeoxlong@trader.com", "username": "mikeoxlong", "net_pl": 2500.50, "backtests": 15},
+        {"email": "gabeowners@trader.com", "username": "gabeowners", "net_pl": 1750.25, "backtests": 12},
+        {"email": "JThomas@trader.com", "username": "JThomas", "net_pl": 980.30, "backtests": 8},
+        {"email": "SWhite@trader.com", "username": "SWhite", "net_pl": 450.00, "backtests": 5},
     ]
     with app.app_context():
         for user_data in users_to_add:
@@ -818,7 +817,7 @@ def add_sample_users_for_leaderboard():
                     is_paid=True,
                     total_net_pl=user_data["net_pl"],
                     total_backtests=user_data["backtests"],
-                    username=user_data["email"].split("@")[0],
+                    username=user_data["username"],
                     show_on_leaderboard=True,
                 )
                 db.session.add(new_user)
@@ -866,7 +865,7 @@ def update_leaderboard_in_background():
             app.logger.info(
                 "Leaderboard update simulation complete. Sleeping for a while..."
             )
-            time.sleep(int(os.environ.get("LEADERBOARD_SLEEP_SECS", "300")))
+            time.sleep(int(os.environ.get("LEADERBOARD_SLEEP_SECS", "86400")))
 
 leaderboard_thread = None
 
