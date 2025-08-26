@@ -362,6 +362,70 @@ def list_users_page():
     return render_template("users.html", users=users)
 
 
+@app.route("/admin", methods=["GET", "POST"])
+@login_required
+def admin_page():
+    """Administrative dashboard for managing users and leaderboard."""
+    if current_user.email != ADMIN_EMAIL:
+        abort(403)
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "add_user":
+            email = request.form.get("email")
+            password = request.form.get("password")
+            is_paid = True if request.form.get("is_paid") else False
+            if email and password:
+                if User.query.filter_by(email=email).first():
+                    flash("User already exists", "error")
+                else:
+                    base_username = email.split("@")[0]
+                    username = base_username
+                    counter = 1
+                    while User.query.filter_by(username=username).first():
+                        username = f"{base_username}{counter}"
+                        counter += 1
+                    user = User(
+                        email=email,
+                        pw_hash=hash_pw(password),
+                        is_paid=is_paid,
+                        username=username,
+                    )
+                    db.session.add(user)
+                    db.session.commit()
+                    flash("User added", "success")
+            return redirect(url_for("admin_page"))
+
+        elif action == "delete_user":
+            user_id = request.form.get("user_id")
+            u = User.query.get(int(user_id))
+            if u:
+                db.session.delete(u)
+                db.session.commit()
+                flash("User removed", "success")
+            return redirect(url_for("admin_page"))
+
+        elif action == "update_leaderboard":
+            user_id = request.form.get("user_id")
+            u = User.query.get(int(user_id))
+            if u:
+                try:
+                    u.total_net_pl = float(request.form.get("total_net_pl", 0))
+                    u.total_backtests = int(request.form.get("total_backtests", 0))
+                    u.show_on_leaderboard = (
+                        True if request.form.get("show_on_leaderboard") else False
+                    )
+                    db.session.commit()
+                    flash("Leaderboard updated", "success")
+                except ValueError:
+                    flash("Invalid values", "error")
+            return redirect(url_for("admin_page"))
+
+    users = User.query.order_by(User.id).all()
+    return render_template("admin.html", users=users)
+
+
 @app.route("/dashboard")
 @login_required
 def member_dashboard_page():
